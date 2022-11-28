@@ -1,8 +1,8 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class UDP_Receiver implements Runnable{
 
@@ -13,13 +13,14 @@ public class UDP_Receiver implements Runnable{
 	// a l'avenir, faire liste de messages => dès qu'on reçoit un msg, on ajoute à la liste
 	// cette liste serait dépilée au fur et a mesure et les messages transmis aux bons threads
 	private static UDP_Receiver instance;
-	private boolean stop;
+	private static boolean running;
 	
 	private UDP_Receiver(int port) throws SocketException {
 		this.port = port;
 		this.socket = new DatagramSocket(this.port);
+    	this.socket.setSoTimeout(1000);
 		this.message = new byte[65535];
-		this.stop = false;
+		UDP_Receiver.running = true;
 	}
 
 	public static UDP_Receiver getInstance(int port) throws SocketException
@@ -41,28 +42,33 @@ public class UDP_Receiver implements Runnable{
 		return tmp;
 	}
 	
-	public void endThread()
-	{
-		this.stop = true;
-	}
-	
 	private void receive()
 	{
-		DatagramPacket DpReceive = new DatagramPacket(this.message, this.message.length);
+		byte[] newMessage = new byte[65535];
+		DatagramPacket DpReceive = new DatagramPacket(newMessage, newMessage.length);
 		try {
 			this.socket.receive(DpReceive);
+			this.message = newMessage;
+			System.out.println("[UDP_Receiver] : MESSAGE RECU ! message = " + this.message);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//nothing to do
+			// maybe later => if timeout 15 times, close connection
 		}
+}
+	
+	public void stop()
+	{
+		UDP_Receiver.running = false;
+	    this.socket.disconnect();
+	    this.socket.close();
+	    this.socket = null;
 	}
 
 	@Override
 	public void run() {
-		while(!this.stop)
+		System.out.println("[UDP_Receiver] : running");
+		while(UDP_Receiver.running)
 		{
-			// pb ici : this.socket.receive est bloquant ! comment faire jsp
-			System.out.println("running");
 			this.receive();
 			try {
 				Thread.sleep(10);
@@ -71,6 +77,6 @@ public class UDP_Receiver implements Runnable{
 				e.printStackTrace();
 			}
 		}
-		System.out.println("UDP_RECEIVER : end run.");
+		System.out.println("[UDP_Receiver] : end of run");
 	}
 }

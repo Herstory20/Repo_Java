@@ -12,7 +12,7 @@ public class UDP_Sender implements Runnable{
 	private String message;	//l'objet message est partagé
 	private MessageType type;
 	private static UDP_Sender instance;
-	private boolean stop;
+	private static boolean running;
 	
 	private UDP_Sender(InetAddress ip, int port) throws SocketException {
 		this.socket = new DatagramSocket();
@@ -20,7 +20,7 @@ public class UDP_Sender implements Runnable{
 		this.port = port;
 		this.message = "";
 		this.type = MessageType.UNKNOWN;
-		this.stop = false;
+		UDP_Sender.running = true;
 	}
 
 	public static UDP_Sender getInstance(InetAddress ip, int port) throws SocketException
@@ -40,9 +40,16 @@ public class UDP_Sender implements Runnable{
 		this.message = message ;
 		this.type = type;
 	}
-	public void endThread()
+	
+	public void stop()
 	{
-		this.stop = true;
+		UDP_Sender.running = false;
+	    this.socket.close();
+	    try {
+	    	this.socket.setSoTimeout(1);
+	    } catch (SocketException e) {}
+	    this.socket.disconnect();
+	    this.socket = null;
 	}
 	
 	private synchronized void send() throws IOException
@@ -56,7 +63,8 @@ public class UDP_Sender implements Runnable{
 
 	@Override
 	public void run() {
-		while(!this.stop)
+		System.out.println("[UDP_Sender] : running");
+		while(UDP_Sender.running)
 		{
 			if(this.message != "")	//un message doit etre envoyé
 			{
@@ -71,6 +79,7 @@ public class UDP_Sender implements Runnable{
 				this.message = "";
 			}
 			
+			//delay pour ne pas surcharger CPU
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -78,7 +87,7 @@ public class UDP_Sender implements Runnable{
 				e.printStackTrace();
 			}
 		}
-		System.out.println("UDP_SENDER : end run.");
+		System.out.println("[UDP_Sender] : end of run");
 	}
 
 }
