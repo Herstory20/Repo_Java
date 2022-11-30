@@ -68,6 +68,10 @@ public class UDP_Sender implements Runnable{
 		this.type = type;
 	}
 	
+	public void setIp(InetAddress ip) {
+		this.ip = ip;
+	}
+	
 	public void setBroadcastEnabled()
 	{
 		this.broadcastMode = true;
@@ -89,9 +93,13 @@ public class UDP_Sender implements Runnable{
 	    this.socket = null;
 	}
 	
+	private synchronized String formaterMessage(){
+		return this.type.ordinal() + this.message;
+	}
+	
 	private synchronized void send() throws IOException
 	{
-        byte buf[] = (this.type + this.message).getBytes();
+        byte buf[] = this.formaterMessage().getBytes();
 		DatagramPacket DpSend = new DatagramPacket(buf, buf.length, this.ip, this.port);
 		this.socket.send(DpSend);
 		this.message = "";
@@ -100,7 +108,7 @@ public class UDP_Sender implements Runnable{
     public void broadcast() throws IOException {
         this.socket.setBroadcast(true);
 
-        byte[] buffer = (this.type + this.message).getBytes();
+        byte[] buffer = this.formaterMessage().getBytes();
 
         DatagramPacket DpBroadCastSend = new DatagramPacket(buffer, buffer.length, InetAddress.getByName("255.255.255.255"), this.port);
         this.socket.send(DpBroadCastSend);
