@@ -21,7 +21,8 @@ public class NetworkManager {
 	
 	public NetworkManager() throws UnknownHostException, SocketException {
 		this.pseudo = "";
-		this.monIp = InetAddress.getLocalHost();
+		this.udp_port = 1236;
+		this.setIPAddress();
 		
 		// send thread config
 		this.udp_send_thread = UDP_Sender.getInstance(this.monIp, this.udp_port);
@@ -42,7 +43,6 @@ public class NetworkManager {
 		String message = "Bonjour;" + monIp.getHostAddress() + ";" + pseudo;
 		this.udp_send_thread.setBroadcastEnabled();
 		this.udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
-		udp_send_thread.setBroadcastDisabled();
 		
 		// attente des réponses des autres utilisateurs
 		String recu = "";
@@ -53,16 +53,18 @@ public class NetworkManager {
 		
 		while(elapsedTime < NetworkManager.CONNEXION_DELAI_ATTENTE_REPONSE_MS) {
 			recu = this.recevoirUDP();
-			if (this.isConnectivite(recu)) {
-				String[] coord;
-				try {
-					coord = getCoordonneesFromReponseConnexion(recu);
-					coordonneesUtilisateur.put(coord[0], coord[1]);
-				} catch(InvalidPseudoException e) {
-					throw e;
-				} catch (InvalidMessageFormatException | InvalidIpException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+			if(!recu.equals("")) {
+				if (this.isConnectivite(recu)) {
+					String[] coord;
+					try {
+						coord = getCoordonneesFromReponseConnexion(recu);
+						coordonneesUtilisateur.put(coord[0], coord[1]);
+					} catch(InvalidPseudoException e) {
+						throw e;
+					} catch (InvalidMessageFormatException | InvalidIpException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 			elapsedTime = System.currentTimeMillis() - start;
@@ -72,6 +74,7 @@ public class NetworkManager {
 		System.out.println("[Network Manager] : Coordonnees recues : \n" + coordonneesUtilisateur);
 		
 		this.pseudo = pseudo;
+		udp_send_thread.setBroadcastDisabled();
 		
 		System.out.println("[Network Manager] : Fin connexion");
 	}
@@ -193,6 +196,22 @@ public class NetworkManager {
     	coordonnees[1] = messagesSepares[2];	// Pseudo
     	
     	return coordonnees;
+    }
+    
+    private void setIPAddress() throws SocketException {
+    	Enumeration e = NetworkInterface.getNetworkInterfaces();
+    	if(e.hasMoreElements())
+    	{
+    	    NetworkInterface n = (NetworkInterface) e.nextElement();
+    	    Enumeration ee = n.getInetAddresses();
+    	    if (ee.hasMoreElements())
+    	    {
+    	        InetAddress i = (InetAddress) ee.nextElement();
+    	        i = (InetAddress) ee.nextElement();
+    	        this.monIp = i;
+    	        System.out.println(i.getHostAddress());
+    	    }
+    	}
     }
     
     // A utility method to convert the byte array

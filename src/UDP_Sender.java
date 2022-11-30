@@ -111,6 +111,7 @@ public class UDP_Sender implements Runnable{
         byte[] buffer = this.formaterMessage().getBytes();
 
         DatagramPacket DpBroadCastSend = new DatagramPacket(buffer, buffer.length, InetAddress.getByName("255.255.255.255"), this.port);
+        System.out.println("message : " + this.formaterMessage() + " - port : " + this.port);
         this.socket.send(DpBroadCastSend);
         socket.setBroadcast(false);
         
