@@ -1,7 +1,11 @@
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.net.NetworkInterface;
 public class NetworkManager {
 	
 	/*
@@ -25,7 +29,7 @@ public class NetworkManager {
 		
 		portUDPs = 1235;
 		portUDPr = 1235;
-
+		
 		if(mode.equals("LISTEN"))
 		{
 			String recu = "";
@@ -56,12 +60,16 @@ public class NetworkManager {
 			UDP_Sender udp_send_thread;
 			
 			InetAddress ip = InetAddress.getLocalHost();
-			
+
+		    
+
+			//InetAddress ipBroadcast = 1;
 			udp_send_thread = UDP_Sender.getInstance(ip, portUDPs);
 			
 			Thread tudpsend = new Thread(udp_send_thread);
 			tudpsend.start();
 			
+			udp_send_thread.setBroadcastEnabled();
 			udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
 			
 			try {
@@ -70,6 +78,7 @@ public class NetworkManager {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			udp_send_thread.setBroadcastDisabled();
 			udp_send_thread.stop();
 		}
 			
