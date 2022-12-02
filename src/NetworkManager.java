@@ -51,6 +51,7 @@ public class NetworkManager {
 		long start = System.currentTimeMillis();
 		long elapsedTime = System.currentTimeMillis() - start;
 		
+		System.out.println("[NETWORK MANAGER] - connexion : Attente réponse autres utilisateurs...");
 		while(elapsedTime < NetworkManager.CONNEXION_DELAI_ATTENTE_REPONSE_MS) {
 			recu = this.recevoirUDP();
 			if(!recu.equals("")) {
@@ -58,12 +59,18 @@ public class NetworkManager {
 					String[] coord;
 					try {
 						coord = getCoordonneesFromReponseConnexion(recu);
-						coordonneesUtilisateur.put(coord[0], coord[1]);
-					} catch(InvalidPseudoException e) {
-						throw e;
+						if(coord[2] == "OK")
+						{
+							coordonneesUtilisateur.put(coord[0], coord[1]);
+						}
+						else {
+							System.out.println("Coordonnees recues erronnees");
+						}
 					} catch (InvalidMessageFormatException | InvalidIpException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} catch (MyOwnIpException e) {
+						System.out.println("[NETWORK MANAGER] - connexion : Réception de notre propre paquet ignorée");
 					}
 				}
 			}
@@ -71,31 +78,40 @@ public class NetworkManager {
 		}
 		
 		// mise a jour de l'annuaire
-		System.out.println("[Network Manager] : Coordonnees recues : \n" + coordonneesUtilisateur);
+		System.out.println("[NETWORK MANAGER] - connexion : Coordonnees recues : \n" + coordonneesUtilisateur);
 		
 		this.pseudo = pseudo;
 		udp_send_thread.setBroadcastDisabled();
 		
-		System.out.println("[Network Manager] : Fin connexion");
+		System.out.println("[NETWORK MANAGER] - connexion : Fin connexion");
 	}
 	
 	private void repondreTentativeConnexionUDP(String recu) {
+		System.out.println("[repondreTentativeConnexionUDP] : Réponse en cours à [ " + recu + " ]");
 		if (this.isConnectivite(recu)) {
+			String[] coord = null ;
 				try {
-					this.getCoordonneesFromDemandeConnexion(recu);
+					coord = this.getCoordonneesFromDemandeConnexion(recu);
 					
-					// on envoit OK si tout est bon avec nos coordonnées
-					String message = "OK;" + monIp.getHostAddress() + ";" + pseudo;
-					this.udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
+					// on envoit OK si tout est bon avec nos coordonnées / KO sinon
+					String message = coord[2] + ";" + monIp.getHostAddress() + ";" + pseudo;
 					
-				} catch (InvalidPseudoException e) {
-					// on envoit KO car pseudo invalide
-					String message = "KO;" + monIp.getHostAddress() + ";" + pseudo;
-					this.udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
-					e.printStackTrace();
+					try {
+						this.udp_send_thread.setIp(InetAddress.getByName(coord[0]));
+						this.udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
+					} catch (UnknownHostException e) {
+						e.printStackTrace();
+					}
 					
+					// On stocke son IP et son PSEUDO dans l'Annuaire
+					if(coord[2].equals("OK")) {
+						System.out.println("MAJ de la table Annuaire ...");
+					}
 				} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
 					e.printStackTrace();
+				} catch (MyOwnIpException e) {
+					// si c'est notre IP, on ignore le paquet
+					System.out.println("[repondreTentativeConnexionUDP] : Propre paquet reçu");
 				}
 		}
 	}
@@ -103,6 +119,7 @@ public class NetworkManager {
 	public void update() {
 		String recu = this.recevoirUDP();
 		if(!recu.equals("")) {
+			System.out.println("[NETWORK MANAGER] - update : MESSAGE " + recu + " RECU ! Réponse en cours...");
 			repondreTentativeConnexionUDP(recu);
 		}
 	}
@@ -117,9 +134,10 @@ public class NetworkManager {
 	
 	private String recevoirUDP() {
 		String recu = "";
-		recu = data(udp_receive_thread.getMessage());
+		recu = this.udp_receive_thread.getMessageString();
+		//recu = NetworkManager.data(this.udp_receive_thread.getMessage());
 		if(!recu.equals(""))
-			System.out.println("Message recu : [" + recu + "]");
+			System.out.println("[NETWORK MANAGER] - recevoirUDP : Message recu : [" + recu + "]");
 		return recu;
 	}
 
@@ -131,9 +149,14 @@ public class NetworkManager {
 	}
 
 	
-    private String[] getCoordonneesFromReponseConnexion(String reponse) throws InvalidMessageFormatException, InvalidPseudoException, InvalidIpException {
-    	String[] coordonnees = new String[2];
-    	
+    private String[] getCoordonneesFromReponseConnexion(String reponse) throws InvalidMessageFormatException, InvalidIpException, MyOwnIpException {
+    	String[] coordonnees = new String[3];
+    	/* Contient :
+    	 * [0] IP
+    	 * [1] Pseudo
+    	 * [2] OK / KO
+    	 * */
+    	coordonnees[2] = "OK";
     	// on ne sélectionne que le message
     	String message = reponse.substring(1);
     	
@@ -143,9 +166,13 @@ public class NetworkManager {
     	if(messagesSepares.length !=3) {
     		throw new InvalidMessageFormatException();
     	}
+    	// l'IP reçue est la notre (ex reception de notre propre broadcast)
+    	if(messagesSepares[1].equals(this.monIp.getHostAddress())) {
+    		throw new MyOwnIpException();
+    	}
     	// le pseudo envoyé était déjà pris
     	if(!messagesSepares[0].equals("OK")) {
-    		throw new InvalidPseudoException("Pseudo déjà pris");
+    		coordonnees[2] = "KO";
     	}
     	// l'IP reçue est erronée
     	if(messagesSepares[1].equals("")) {
@@ -153,7 +180,7 @@ public class NetworkManager {
     	}
     	// le pseudo reçu est erroné
     	if(messagesSepares[2].equals("")) {
-    		throw new InvalidPseudoException("Pseudo reçu erroné");
+    		coordonnees[2] = "KO";
     	}
     	
     	coordonnees[0] = messagesSepares[1];	// IP
@@ -162,8 +189,14 @@ public class NetworkManager {
     	return coordonnees;
     }
     
-    private String[] getCoordonneesFromDemandeConnexion(String reponse) throws InvalidMessageFormatException, InvalidPseudoException, InvalidIpException, InvalidConnexionMessageException {
-    	String[] coordonnees = new String[2];
+    private String[] getCoordonneesFromDemandeConnexion(String reponse) throws InvalidMessageFormatException, InvalidIpException, InvalidConnexionMessageException, MyOwnIpException {
+    	String[] coordonnees = new String[3];
+    	/* Contient :
+    	 * [0] IP
+    	 * [1] Pseudo
+    	 * [2] OK / KO
+    	 * */
+    	coordonnees[2] = "OK";
     	String expectedMessage = "Bonjour";
     	
     	// on ne sélectionne que le message
@@ -175,21 +208,27 @@ public class NetworkManager {
     	if(messagesSepares.length !=3) {
     		throw new InvalidMessageFormatException();
     	}
-    	// le pseudo envoyé était déjà pris
-    	if(!messagesSepares[0].equals(expectedMessage)) {
-    		throw new InvalidConnexionMessageException("Expected " + expectedMessage + " but got " + messagesSepares[0]);
+    	// l'IP reçue est la notre (ex reception de notre propre broadcast)
+    	if(messagesSepares[1].equals(this.monIp.getHostAddress())) {
+    		throw new MyOwnIpException();
     	}
     	// l'IP reçue est erronée
     	if(messagesSepares[1].equals("")) {
     		throw new InvalidIpException();
     	}
+    	// le pseudo envoyé était déjà pris
+    	if(!messagesSepares[0].equals(expectedMessage)) {
+    		throw new InvalidConnexionMessageException("Expected " + expectedMessage + " but got " + messagesSepares[0]);
+    	}
     	// le pseudo reçu est erroné
     	if(messagesSepares[2].equals("")) {
-    		throw new InvalidPseudoException("Pseudo reçu erroné");
+    		System.out.println("Pseudo reçu erroné");
+        	coordonnees[2] = "KO";
     	}
     	// le pseudo reçu est le meme que le notre
     	if(messagesSepares[2].equals(this.pseudo)) {
-    		throw new InvalidPseudoException("Pseudo reçu déjà pris");
+    		System.out.println("Pseudo reçu déjà pris");
+        	coordonnees[2] = "KO";
     	}
     	
     	coordonnees[0] = messagesSepares[1];	// IP
@@ -212,22 +251,6 @@ public class NetworkManager {
     	        System.out.println(i.getHostAddress());
     	    }
     	}
-    }
-    
-    // A utility method to convert the byte array
-    // data into a string representation.
-    private static String data(byte[] a)
-    {
-        if (a == null)
-            return null;
-        StringBuilder ret = new StringBuilder();
-        int i = 0;
-        while (a[i] != 0)
-        {
-            ret.append((char) a[i]);
-            i++;
-        }
-        return ret.toString();
     }
     
 }

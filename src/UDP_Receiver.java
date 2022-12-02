@@ -34,27 +34,44 @@ public class UDP_Receiver implements Runnable{
 			return UDP_Receiver.instance;
 		}
 	}
-	
+	/*
 	public byte[] getMessage()
 	{
 		byte[] tmp = this.message;
 		this.message = new byte[65535];
 		return tmp;
-	}
+	}*/
 	
+	public synchronized String getMessageString()
+	{
+		String tmp  = this.convertMessageByteToString();
+		this.message = new byte[65535];
+		return tmp;
+	}
+	private String convertMessageByteToString()
+	{
+		String tmp = new String(this.message);	//trim pour éliminer les espaces générés dus à la taille du tableau de bytes
+		tmp = tmp.trim();
+		return tmp;
+	}
+
+    
 	private void receive()
 	{
 		byte[] newMessage = new byte[65535];
 		DatagramPacket DpReceive = new DatagramPacket(newMessage, newMessage.length);
 		try {
-			this.socket.receive(DpReceive);
-			this.message = newMessage;
-			System.out.println("[UDP_Receiver] : MESSAGE RECU ! message = " + this.message);
+			synchronized(this) {
+				this.socket.receive(DpReceive);
+				this.message = newMessage;
+				System.out.println("[UDP_Receiver] : MESSAGE RECU ! message = [ " + this.convertMessageByteToString() + " ]");
+			}
 		} catch (IOException e) {
 			//nothing to do
 			// maybe later => if timeout 15 times, close connection
 		}
-}
+	}
+
 	
 	public void stop()
 	{

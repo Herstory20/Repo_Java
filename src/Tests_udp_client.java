@@ -8,7 +8,7 @@ import java.net.UnknownHostException;
 public class Tests_udp_client {
 
 	public static void main(String[] args) throws SocketException, UnknownHostException {
-		DatagramSocket ds = new DatagramSocket(1234);
+		DatagramSocket ds = new DatagramSocket(1236);
 		
 		//InetAddress ip = InetAddress.getLocalHost();
 		
