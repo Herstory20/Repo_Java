@@ -170,6 +170,20 @@ public class JDBC {
           }
   }
   
+  
+  
+  public void Alter() {
+	     String sql = "ALTER TABLE Messages \n"
+	     		+ "  ADD COLUMN date text";
+	     try (Connection conn = this.connect();
+	    		 Statement stmt = conn.createStatement()) {
+	            // Modify a new table
+	            stmt.execute(sql);
+	          } catch (SQLException e) {
+	              System.out.println(e.getMessage());
+	          }
+	  }
+  
   /**
    * Delete a Contact specified by the ips
    *
@@ -262,7 +276,7 @@ public class JDBC {
             // loop through the result set
             while (rs.next()) {
                 System.out.println(rs.getInt("id") +  "\t" + rs.getString("message")+ "\t"
-                		+ rs.getString("ip1")+ "\t" + rs.getString("ip2"));
+                		+ rs.getString("ip1")+ "\t" + rs.getString("ip2") + "\t" + rs.getString("date"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -277,7 +291,8 @@ public class JDBC {
         JDBC app = new JDBC();
         //app.createNewDatabase("BDD.db");
         //app.createNewTable();
-        /*app.insertM(3, "Tu fais quoi en ce moment?", "192.168.10.1","192.168.12.1");
+        //app.Alter();
+        app.insertM(3, "Tu fais quoi en ce moment?", "192.168.10.1","192.168.12.1");
         app.insertM(4, "Je suis tellement débordé avec ce projet de chat.","192.168.12.1","192.168.10.1");
         app.selectAllM();
         app.deleteM(3);
@@ -291,7 +306,7 @@ public class JDBC {
         	System.out.println("Yes, It's used\n");
         }else System.out.println("No, It's free\n");
         app.deleteA("192.168.10.1");
-        app.deleteA("192.168.12.1");*/
+        app.deleteA("192.168.12.1");
     }
 
 }
