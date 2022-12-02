@@ -15,7 +15,7 @@ public class UDP_Sender implements Runnable{
 	private InetAddress ip;
 	private InetAddress broadcastAddress;
 	private int port;
-	private String message;	//l'objet message est partagé
+	private Message message;	//l'objet message est partagé
 	private MessageType type;
 	private static UDP_Sender instance;
 	private static boolean running;
@@ -25,7 +25,7 @@ public class UDP_Sender implements Runnable{
 		this.socket = new DatagramSocket();
 		this.ip = ip;
 		this.port = port;
-		this.message = "";
+		this.message = new Message();
 		this.type = MessageType.UNKNOWN;
 		UDP_Sender.running = true;
 		this.loadBroadcastAddress();

@@ -48,12 +48,6 @@ public class UDP_Receiver implements Runnable{
 		this.message = new byte[65535];
 		return tmp;
 	}
-	private String convertMessageByteToString()
-	{
-		String tmp = new String(this.message);	//trim pour éliminer les espaces générés dus à la taille du tableau de bytes
-		tmp = tmp.trim();
-		return tmp;
-	}
 
     
 	private void receive()
