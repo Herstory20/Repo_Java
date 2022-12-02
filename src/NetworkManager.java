@@ -7,8 +7,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-
-
+import java.util.Set;
 import java.net.NetworkInterface;
 public class NetworkManager {
 
@@ -18,9 +17,11 @@ public class NetworkManager {
 	private InetAddress monIp;
 	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 1000;
 	private String pseudo;
+	private Hashtable<String, String> coordonneesUtilisateur;
 	
 	public NetworkManager() throws UnknownHostException, SocketException {
 		this.pseudo = "";
+		this.coordonneesUtilisateur = new Hashtable<String, String>();
 		this.udp_port = 1236;
 		this.setIPAddress();
 		
@@ -37,8 +38,8 @@ public class NetworkManager {
 		
 	}
 	
-	public void connexion(String pseudo) throws InvalidPseudoException {
-		
+	public boolean connexion(String pseudo) throws InvalidPseudoException {
+		boolean success = true;
 		// envoi des informations de connexion
 		String message = "Bonjour;" + monIp.getHostAddress() + ";" + pseudo;
 		this.udp_send_thread.setBroadcastEnabled();
@@ -46,7 +47,6 @@ public class NetworkManager {
 		
 		// attente des réponses des autres utilisateurs
 		String recu = "";
-		Hashtable<String, String> coordonneesUtilisateur = new Hashtable<String, String>();
 		
 		long start = System.currentTimeMillis();
 		long elapsedTime = System.currentTimeMillis() - start;
@@ -61,10 +61,11 @@ public class NetworkManager {
 						coord = getCoordonneesFromReponseConnexion(recu);
 						if(coord[2] == "OK")
 						{
-							coordonneesUtilisateur.put(coord[0], coord[1]);
+							this.coordonneesUtilisateur.put(coord[0], coord[1]);
 						}
 						else {
 							System.out.println("Coordonnees recues erronnees");
+							success = false;
 						}
 					} catch (InvalidMessageFormatException | InvalidIpException e) {
 						// TODO Auto-generated catch block
@@ -77,14 +78,24 @@ public class NetworkManager {
 			elapsedTime = System.currentTimeMillis() - start;
 		}
 		
-		// mise a jour de l'annuaire
-		System.out.println("[NETWORK MANAGER] - connexion : Coordonnees recues : \n" + coordonneesUtilisateur);
+		System.out.println("[NETWORK MANAGER] - connexion : Coordonnees recues : \n" + this.coordonneesUtilisateur);
 		
-		this.pseudo = pseudo;
+		if(success) {
+			// mise a jour de l'annuaire
+			System.out.println("[NETWORK MANAGER] - connexion : Mise à jour de l'Annuaire...");
+			this.pseudo = pseudo;
+		}
+		else {
+			System.out.println("[NETWORK MANAGER] - connexion : Echec de la mise à jour de l'Annuaire, pseudo invalidé par les autres utilisateurs");
+		}
+		
+		
 		udp_send_thread.setBroadcastDisabled();
 		
 		System.out.println("[NETWORK MANAGER] - connexion : Fin connexion");
+		return success;
 	}
+	
 	
 	private void repondreTentativeConnexionUDP(String recu) {
 		System.out.println("[repondreTentativeConnexionUDP] : Réponse en cours à [ " + recu + " ]");

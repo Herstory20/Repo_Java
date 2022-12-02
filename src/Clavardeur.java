@@ -17,10 +17,12 @@ public class Clavardeur {
 		NetworkManager nm = new NetworkManager();
 		boolean connexionOK = false;
 		try {
-			nm.connexion(pseudo);
-			connexionOK = true;
+			connexionOK = nm.connexion(pseudo);
 		} catch (InvalidPseudoException e) {
 			e.printStackTrace();
+		}
+		if(!connexionOK) {
+			System.exit(0);
 		}
 		System.out.println("Ecoute :\n>>");
 		while(connexionOK)
