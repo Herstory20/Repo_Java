@@ -141,7 +141,7 @@ public class JDBC {
        		pstmt.setString(1, login);
             ResultSet rs    = pstmt.executeQuery();
            // loop through the result set
-           while (rs.next()) {
+           while ((rs.next() && (!a))) {
         	   if (rs.getString("login").equals(login)) {
         		   a= true;
         	   }
@@ -170,11 +170,8 @@ public class JDBC {
           }
   }
   
-  
-  
   public void Alter() {
-	     String sql = "ALTER TABLE Messages \n"
-	     		+ "  ADD COLUMN date text";
+	     String sql = "ALTER TABLE Annuaire DROP COLUMN port";
 	     try (Connection conn = this.connect();
 	    		 Statement stmt = conn.createStatement()) {
 	            // Modify a new table
@@ -302,7 +299,7 @@ public class JDBC {
         app.insertA("192.168.10.1","Herstory","6002");
         app.insertAwithoutP("192.168.12.1","Lemonade");
         app.selectAllA();
-        if (app.IsLoginUsed("Caton")) {
+        if (app.IsLoginUsed("Herstory")) {
         	System.out.println("Yes, It's used\n");
         }else System.out.println("No, It's free\n");
         app.deleteA("192.168.10.1");

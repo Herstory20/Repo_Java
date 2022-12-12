@@ -7,6 +7,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.border.EmptyBorder;
 /**
@@ -16,7 +17,7 @@ import javax.swing.border.EmptyBorder;
 public class LoginScreen implements ActionListener  {
     
     private JTextField textField;
-    private JLabel label =new JLabel("");
+    private JLabel label =new JLabel("Attention !! Pas de caractères spéciaux !");
     private JButton button;
     private JPanel pane;
     
@@ -37,6 +38,10 @@ public class LoginScreen implements ActionListener  {
         consigne.setFont(new Font("Tahoma", Font.PLAIN, 20));
         consigne.setBounds(100,50,500,50);
         pane.add(consigne);
+        
+        label.setFont(new Font("Tahoma", Font.PLAIN, 15));
+        label.setBounds(100,210,400,60);
+        pane.add(label);
         textField = new JTextField();
         textField.setFont(new Font("Tahoma", Font.PLAIN, 32));
         textField.setBounds(225, 150, 400, 50);
@@ -54,9 +59,29 @@ public class LoginScreen implements ActionListener  {
     @Override
     public void actionPerformed(ActionEvent ae) {
         String userName = textField.getText();
+        Pattern p = Pattern.compile("[^A-Za-z0-9]");
+        Matcher m = p.matcher(userName);
+       // boolean b = m.matches();
+        boolean b = m.find();
+        if (b) {
+        	label.setForeground(Color.BLUE);
+        	label.setText("<html>Erreur !! Vous avez un caractère spéciale, \n"
+        			+ "veuillez rentrer un nouveau pseudo.</html>");
+        }
+        if ((textField.getText().length()==0)) {
+        	label.setForeground(Color.BLUE);
+        	label.setText("<html>Erreur !! Vous ne pouvez pas rentrer un pseudo vide.</html>");
+        }
         JDBC app = new JDBC();
-        if (app.IsLoginUsed(userName)) {
+        app.insertA("192.168.10.1","Herstory","6002");
+        app.selectAllA();
+        app.deleteA("192.168.10.1");
+        if (!app.IsLoginUsed(userName)) {
         	JOptionPane.showMessageDialog(button, "You have successfully logged ");
+        }
+        else {
+        	label.setForeground(Color.BLUE);
+        	label.setText("<html>Veuillez changer de pseudo, il est déjà utilisé.</html>");
         }
     }
     
