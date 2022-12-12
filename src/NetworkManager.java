@@ -1,14 +1,10 @@
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.net.NetworkInterface;
+
 public class NetworkManager {
 
 	private UDP_Sender udp_send_thread;
@@ -43,7 +39,7 @@ public class NetworkManager {
 		// envoi des informations de connexion
 		String message = "Bonjour;" + monIp.getHostAddress() + ";" + pseudo;
 		this.udp_send_thread.setBroadcastEnabled();
-		this.udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
+		this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
 		
 		// attente des réponses des autres utilisateurs
 		String recu = "";
@@ -54,7 +50,7 @@ public class NetworkManager {
 		System.out.println("[NETWORK MANAGER] - connexion : Attente réponse autres utilisateurs...");
 		while(elapsedTime < NetworkManager.CONNEXION_DELAI_ATTENTE_REPONSE_MS) {
 			recu = this.recevoirUDP();
-			if(!recu.equals("")) {
+			if(!recu.isEmpty()) {
 				if (this.isConnectivite(recu)) {
 					String[] coord;
 					try {
@@ -109,7 +105,7 @@ public class NetworkManager {
 					
 					try {
 						this.udp_send_thread.setIp(InetAddress.getByName(coord[0]));
-						this.udp_send_thread.setMessage(message, MessageType.CONNECTIVITE);
+						this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
 					} catch (UnknownHostException e) {
 						e.printStackTrace();
 					}
@@ -129,7 +125,7 @@ public class NetworkManager {
 	
 	public void update() {
 		String recu = this.recevoirUDP();
-		if(!recu.equals("")) {
+		if(!recu.isEmpty()) {
 			System.out.println("[NETWORK MANAGER] - update : MESSAGE " + recu + " RECU ! Réponse en cours...");
 			repondreTentativeConnexionUDP(recu);
 		}
@@ -147,7 +143,7 @@ public class NetworkManager {
 		String recu = "";
 		recu = this.udp_receive_thread.getMessageString();
 		//recu = NetworkManager.data(this.udp_receive_thread.getMessage());
-		if(!recu.equals(""))
+		if(!recu.isEmpty())
 			System.out.println("[NETWORK MANAGER] - recevoirUDP : Message recu : [" + recu + "]");
 		return recu;
 	}
@@ -186,11 +182,11 @@ public class NetworkManager {
     		coordonnees[2] = "KO";
     	}
     	// l'IP reçue est erronée
-    	if(messagesSepares[1].equals("")) {
+    	if(messagesSepares[1].isEmpty()) {
     		throw new InvalidIpException();
     	}
     	// le pseudo reçu est erroné
-    	if(messagesSepares[2].equals("")) {
+    	if(messagesSepares[2].isEmpty()) {
     		coordonnees[2] = "KO";
     	}
     	
@@ -224,7 +220,7 @@ public class NetworkManager {
     		throw new MyOwnIpException();
     	}
     	// l'IP reçue est erronée
-    	if(messagesSepares[1].equals("")) {
+    	if(messagesSepares[1].isEmpty()) {
     		throw new InvalidIpException();
     	}
     	// le pseudo envoyé était déjà pris
@@ -232,7 +228,7 @@ public class NetworkManager {
     		throw new InvalidConnexionMessageException("Expected " + expectedMessage + " but got " + messagesSepares[0]);
     	}
     	// le pseudo reçu est erroné
-    	if(messagesSepares[2].equals("")) {
+    	if(messagesSepares[2].isEmpty()) {
     		System.out.println("Pseudo reçu erroné");
         	coordonnees[2] = "KO";
     	}

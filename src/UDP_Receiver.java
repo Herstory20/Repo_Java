@@ -9,7 +9,7 @@ public class UDP_Receiver implements Runnable{
 
 	private DatagramSocket socket;
 	private int port;
-	private byte[] message;
+	private Message message;
 	// a l'avenir, faire liste de messages => dès qu'on reçoit un msg, on ajoute à la liste
 	// cette liste serait dépilée au fur et a mesure et les messages transmis aux bons threads
 	private static UDP_Receiver instance;
@@ -19,7 +19,7 @@ public class UDP_Receiver implements Runnable{
 		this.port = port;
 		this.socket = new DatagramSocket(this.port);
     	this.socket.setSoTimeout(1000);
-		this.message = new byte[65535];
+		this.message = null;
 		UDP_Receiver.running = true;
 	}
 
@@ -34,18 +34,17 @@ public class UDP_Receiver implements Runnable{
 			return UDP_Receiver.instance;
 		}
 	}
-	/*
-	public byte[] getMessage()
-	{
-		byte[] tmp = this.message;
-		this.message = new byte[65535];
-		return tmp;
-	}*/
 	
 	public synchronized String getMessageString()
 	{
-		String tmp  = this.convertMessageByteToString();
-		this.message = new byte[65535];
+		String tmp;
+		if(message==null) {
+			tmp = "";
+		}
+		else {
+			tmp  = this.message.getTrameString();
+			this.message = null;
+		}
 		return tmp;
 	}
 
@@ -57,8 +56,8 @@ public class UDP_Receiver implements Runnable{
 		try {
 			synchronized(this) {
 				this.socket.receive(DpReceive);
-				this.message = newMessage;
-				System.out.println("[UDP_Receiver] : MESSAGE RECU ! message = [ " + this.convertMessageByteToString() + " ]");
+				this.message = new Message(newMessage);
+				System.out.println("[UDP_Receiver] : MESSAGE RECU ! message = [ " + this.message.getTrameString() + " ]");
 			}
 		} catch (IOException e) {
 			//nothing to do
