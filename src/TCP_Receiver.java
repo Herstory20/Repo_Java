@@ -24,6 +24,9 @@ public class TCP_Receiver implements Runnable{
 
         System.out.println("Attente de connexion sur " + this.port);
         this.servSocket = new ServerSocket(this.port);
+	}
+	
+	private void attenteConnexion() throws IOException {
         this.link = this.servSocket.accept();
     	this.link.setSoTimeout(1000);
         this.ipDest = this.link.getInetAddress();
@@ -63,6 +66,12 @@ public class TCP_Receiver implements Runnable{
 	@Override
 	public void run() {
 		System.out.println("[TCP_Receiver] : running");
+		try {
+			this.attenteConnexion();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
 		while(this.running)
 		{
 			this.receive();

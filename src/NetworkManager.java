@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -6,35 +7,39 @@ import java.util.Hashtable;
 import java.net.NetworkInterface;
 
 public class NetworkManager {
-
+	
+	// threads udp pour connexion
 	private UDP_Sender udp_send_thread;
 	private UDP_Receiver udp_receive_thread;
-	private int udp_port;
+	
+	// threads tcp pour ouverture de discussion & négociation de port
+	private TCP_Sender tcp_send_thread;
+	private TCP_Receiver tcp_receive_thread;
+	
 	private InetAddress monIp;
+	private static final int UDP_PORT = 1236;
+	private static final int TCP_PORT = 1237;
 	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 1000;
 	private String pseudo;
 	private Hashtable<String, String> coordonneesUtilisateur;
 	
-	public NetworkManager() throws UnknownHostException, SocketException {
+	public NetworkManager() throws IOException {
 		this.pseudo = "";
 		this.coordonneesUtilisateur = new Hashtable<String, String>();
-		this.udp_port = 1236;
 		this.setIPAddress();
 		
-		// send thread config
-		this.udp_send_thread = UDP_Sender.getInstance(this.monIp, this.udp_port);
+		// UDP thread config
+		this.udp_send_thread = UDP_Sender.getInstance(null, NetworkManager.UDP_PORT);
 		Thread t_udpsend = new Thread(this.udp_send_thread);
+		this.udp_receive_thread = UDP_Receiver.getInstance(NetworkManager.UDP_PORT);
+		Thread t_udprcv = new Thread(this.udp_receive_thread);
 
-		// receive thread config
-		this.udp_receive_thread = UDP_Receiver.getInstance(this.udp_port);
-		Thread tudprcv = new Thread(this.udp_receive_thread);
 		
 		t_udpsend.start();
-		tudprcv.start();
-		
+		t_udprcv.start();	
 	}
 	
-	public boolean connexion(String pseudo) throws InvalidPseudoException {
+	public boolean connexion(String pseudo) throws InvalidPseudoException, IOException {
 		boolean success = true;
 		// envoi des informations de connexion
 		String message = "Bonjour;" + monIp.getHostAddress() + ";" + pseudo;
@@ -80,6 +85,7 @@ public class NetworkManager {
 			// mise a jour de l'annuaire
 			System.out.println("[NETWORK MANAGER] - connexion : Mise à jour de l'Annuaire...");
 			this.pseudo = pseudo;
+			this.initTCPRcvThreads();
 		}
 		else {
 			System.out.println("[NETWORK MANAGER] - connexion : Echec de la mise à jour de l'Annuaire, pseudo invalidé par les autres utilisateurs");
@@ -94,18 +100,33 @@ public class NetworkManager {
 	
 
 	public void update() {
-		String recu = this.recevoirUDP();
-		if(!recu.isEmpty()) {
-			System.out.println("[NETWORK MANAGER] - update : MESSAGE " + recu + " RECU ! Réponse en cours...");
-			repondreTentativeConnexionUDP(recu);
+		String recuUdp = this.recevoirUDP();
+		if(!recuUdp.isEmpty()) {
+			System.out.println("[NETWORK MANAGER] - update : MESSAGE UDP " + recuUdp + " RECU ! Réponse en cours...");
+			this.repondreTentativeConnexionUDP(recuUdp);
+		}
+		
+		Message recuTcp = this.recevoirTCP();
+		if(recuTcp != null) {
+			System.out.println("[NETWORK MANAGER] - update : MESSAGE TCP " + recuTcp + " RECU ! Réponse en cours...");
+			this.repondreTentativeConnexionTCP(recuTcp);
 		}
 	}
 	
 	
 	
-	/** Méthodes privées **/
+	/** Méthodes privées 
+	 * @throws IOException **/
 	
 	
+	private void initTCPRcvThreads() throws IOException {
+		// TCP thread config
+		this.tcp_receive_thread = new TCP_Receiver(NetworkManager.TCP_PORT);
+		Thread t_tcprcv = new Thread(tcp_receive_thread);
+		//le thread d'envoi ne peut etre lancé que lorsqu'on sait à qui parler
+		
+		t_tcprcv.start();
+	}
 	
 	private void repondreTentativeConnexionUDP(String recu) {
 		System.out.println("[repondreTentativeConnexionUDP] : Réponse en cours à [ " + recu + " ]");
@@ -137,12 +158,18 @@ public class NetworkManager {
 		}
 	}
 	
+	private void repondreTentativeConnexionTCP(Message recu) {
+		System.out.println("[repondreTentativeConnexionTCP] : Réponse en cours à [ " + recu + " ]");
+
+	}
 	
 	@Override
-	public void finalize()
+	public void finalize() throws IOException
 	{
 		this.udp_send_thread.stop();
 		this.udp_receive_thread.stop();
+		//this.tcp_send_thread.stop();
+		this.tcp_receive_thread.stop();
 		System.out.println("[Network Manager] : Fin network manager");
 	}
 	
@@ -152,6 +179,15 @@ public class NetworkManager {
 		//recu = NetworkManager.data(this.udp_receive_thread.getMessage());
 		if(!recu.isEmpty())
 			System.out.println("[NETWORK MANAGER] - recevoirUDP : Message recu : [" + recu + "]");
+		return recu;
+	}
+	
+	private Message recevoirTCP() {
+		Message recu;
+		recu = this.tcp_receive_thread.getMessage();
+		//recu = NetworkManager.data(this.udp_receive_thread.getMessage());
+		if(recu != null)
+			System.out.println("[NETWORK MANAGER] - recevoirTCP : Message recu : [" + recu + "]");
 		return recu;
 	}
 
