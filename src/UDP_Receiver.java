@@ -38,7 +38,7 @@ public class UDP_Receiver implements Runnable{
 	public synchronized String getMessageString()
 	{
 		String tmp;
-		if(message==null) {
+		if(this.message==null) {
 			tmp = "";
 		}
 		else {
@@ -81,7 +81,7 @@ public class UDP_Receiver implements Runnable{
 		{
 			this.receive();
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

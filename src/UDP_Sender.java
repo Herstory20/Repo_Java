@@ -123,7 +123,7 @@ public class UDP_Sender implements Runnable{
 			if(this.message != null)	//un message doit etre envoyé
 			{
 				try {
-					System.out.println("Demande d'envoi de \"" + this.message.getContenu() + "\" en mode [" + this.message.getType() + "]...");
+					System.out.println("[UDP_Sender] : Demande d'envoi de \"" + this.message.getContenu() + "\" en mode [" + this.message.getType() + "]...");
 					this.tentativesEnvoi++; 
 					if(this.broadcastMode)
 					{
@@ -133,9 +133,9 @@ public class UDP_Sender implements Runnable{
 						this.send();
 					}
 					this.tentativesEnvoi = 0;
-					System.out.println("Message envoyé !");
+					System.out.println("[UDP_Sender] : Message envoyé !");
 				} catch (IOException e) {
-					System.out.println("Echec de l'envoi !");
+					System.out.println("[UDP_Sender] : Echec de l'envoi !");
 					e.printStackTrace();
 				}
 				if(this.tentativesEnvoi > UDP_Sender.MAX_TENTATIVES)
@@ -147,7 +147,7 @@ public class UDP_Sender implements Runnable{
 			
 			//delay pour ne pas surcharger CPU
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

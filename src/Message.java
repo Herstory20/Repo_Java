@@ -18,6 +18,8 @@ public class Message {
 	
 	
 	
+	
+	
 	public byte[] getTrame() {
 		return trame;
 	}

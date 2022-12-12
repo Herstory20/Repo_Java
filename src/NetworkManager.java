@@ -92,6 +92,20 @@ public class NetworkManager {
 		return success;
 	}
 	
+
+	public void update() {
+		String recu = this.recevoirUDP();
+		if(!recu.isEmpty()) {
+			System.out.println("[NETWORK MANAGER] - update : MESSAGE " + recu + " RECU ! Réponse en cours...");
+			repondreTentativeConnexionUDP(recu);
+		}
+	}
+	
+	
+	
+	/** Méthodes privées **/
+	
+	
 	
 	private void repondreTentativeConnexionUDP(String recu) {
 		System.out.println("[repondreTentativeConnexionUDP] : Réponse en cours à [ " + recu + " ]");
@@ -123,13 +137,6 @@ public class NetworkManager {
 		}
 	}
 	
-	public void update() {
-		String recu = this.recevoirUDP();
-		if(!recu.isEmpty()) {
-			System.out.println("[NETWORK MANAGER] - update : MESSAGE " + recu + " RECU ! Réponse en cours...");
-			repondreTentativeConnexionUDP(recu);
-		}
-	}
 	
 	@Override
 	public void finalize()
