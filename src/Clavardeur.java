@@ -8,7 +8,6 @@ public class Clavardeur {
 	public static void main(String[] args) throws IOException {
 		
 		InetAddress ipToReach;
-		int portToReach;
 		
 		String pseudo = "";
 		if(args.length == 1)
@@ -35,40 +34,26 @@ public class Clavardeur {
 		}
 		if(args.length == 2)	// cas d'une machine voulant lancer une conversation
 		{
-			ipToReach = InetAddress.getByName(args[0]);
-			portToReach = Integer.parseInt(args[1]);
-			
-			TCP_Sender tcp_send_thread = new TCP_Sender(ipToReach, portToReach);
-			Thread t_udpsend = new Thread(tcp_send_thread);
+			pseudo = args[0];
+			ipToReach = InetAddress.getByName(args[1]);
 
-			TCP_Receiver tcp_receive_thread = new TCP_Receiver(portToReach);
-			Thread t_udprcv = new Thread(tcp_receive_thread);
-			
-			t_udpsend.start();
-			t_udprcv.start();
-			
+			NetworkManager nm = new NetworkManager();
+			boolean connexionOK = false;
 			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {}
+				connexionOK = nm.connexion(pseudo);
+			} catch (InvalidPseudoException e) {
+				e.printStackTrace();
+			}
+			if(!connexionOK) {
+				System.exit(0);
+			}
 			
-			tcp_send_thread.setMessage(new Message("Discussion", MessageType.COMMUNICATION));
-			
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {}
-			
-			Message recu;
-			recu = tcp_receive_thread.getMessage();
-			System.out.println("Message recu : " + recu);
-			System.out.println("reponse en cours....");
-			tcp_send_thread.setMessage(new Message("DiscussionOK:" + 123456789, MessageType.CONNECTIVITE));
-
-			
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {}
-			
-			tcp_send_thread.stop();
+			nm.newDiscussion(ipToReach);
+			System.out.println("Demande de discussion :\n>>");
+			while(connexionOK)
+			{
+				nm.update();
+			}
 		}
 		else {
 			System.out.println("argument PSEUDO manquant");

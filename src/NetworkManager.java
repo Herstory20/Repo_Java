@@ -23,7 +23,7 @@ public class NetworkManager {
 	private InetAddress tcp_ipDistant;
 	private static final int UDP_PORT = 1236;
 	private static final int TCP_PORT = 1237;
-	private int futurPortTcpServ, futurPortTcpClient;
+	private int futurPortTcpLocal, futurPortTcpDistant;
 	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 1000;
 	private String pseudo;
 	private Hashtable<String, String> coordonneesUtilisateur;
@@ -31,8 +31,8 @@ public class NetworkManager {
 	public NetworkManager() throws IOException {
 		this.pseudo = "";
 		this.tcp_ipDistant = null;
-		this.futurPortTcpServ = 0;
-		this.futurPortTcpClient = 0;
+		this.futurPortTcpLocal = 0;
+		this.futurPortTcpDistant = 0;
 		this.coordonneesUtilisateur = new Hashtable<String, String>();
 		this.setIPAddress();
 		
@@ -116,9 +116,21 @@ public class NetworkManager {
 		
 		Message recuTcp = this.recevoirTCP();
 		// /!\ vérifier qu'on reçoive bien un paquet du meme ip pendant une co !
+		// + vérifier que l'ip est dans le dictionnaire ! = sécu
 		if(recuTcp != null) {
 			System.out.println("[NETWORK MANAGER] - update : MESSAGE TCP " + recuTcp + " RECU ! Réponse en cours...");
 			this.negociationDePorts(recuTcp);
+		}
+	}
+	
+	public void newDiscussion(InetAddress ipToReach) {
+		this.tcp_ipDistant = ipToReach;
+		try {
+			this.initTCPSendThread();
+			this.tcp_send_thread.setMessage(new Message("Discussion", MessageType.CONNECTIVITE));
+			
+		} catch (IOException e) {
+			
 		}
 	}
 	
@@ -130,20 +142,30 @@ public class NetworkManager {
 	
 	private void initTCPRcvThread() throws IOException {
 		// TCP thread config
-		this.tcp_receive_thread = new TCP_Receiver(NetworkManager.TCP_PORT);
-		Thread t_tcprcv = new Thread(tcp_receive_thread);
-		
-		t_tcprcv.start();
+		try {
+			this.tcp_receive_thread = new TCP_Receiver(NetworkManager.TCP_PORT);
+			Thread t_tcprcv = new Thread(tcp_receive_thread);
+			t_tcprcv.start();
+		} catch (IOException e) {
+			System.out.println("Connexion sur le port " + NetworkManager.TCP_PORT + " impossible");
+			throw new IOException();
+		}
 	}
 	
 
-	private void initTCPSendThread() throws IOException {
+	private void initTCPSendThread() throws IOException{
 		// TCP thread config
-		this.tcp_send_thread = new TCP_Sender(this.tcp_ipDistant, NetworkManager.TCP_PORT);
-		Thread t_tcpsend = new Thread(this.tcp_send_thread);
-		
-		t_tcpsend.start();
+		try {
+			this.tcp_send_thread = new TCP_Sender(this.tcp_ipDistant, NetworkManager.TCP_PORT);
+			Thread t_tcpsend = new Thread(this.tcp_send_thread);
+			t_tcpsend.start();
+		} catch (IOException e) {
+			System.out.println("Connexion avec " + this.tcp_ipDistant + " sur le port " + NetworkManager.TCP_PORT + " impossible");
+			throw new IOException();
+		}
 	}
+	
+	
 	
 	private void repondreTentativeConnexionUDP(String recu) {
 		System.out.println("[repondreTentativeConnexionUDP] : Réponse en cours à [ " + recu + " ]");
@@ -180,26 +202,52 @@ public class NetworkManager {
 		System.out.println("[negociationDePorts] : Réponse en cours à [ " + recu + " ]");
 		// mettre des états éventuellement : ATTENTE REPONSE
 		// chercher un port de libre
-		if(recu.getContenu().equals("Discussion") && this.futurPortTcpServ == 0) {
-			this.futurPortTcpServ = this.generateRandomPort();
-			System.out.println("port libre : " + this.futurPortTcpServ);
+		if(recu.getContenu().equals("Discussion") && this.futurPortTcpLocal == 0) {
+			this.envoyerPortLibre();
+		}
+		else if (recu.getContenu().contains("DiscussionOK")) {
+			if(this.futurPortTcpLocal == 0) {
+				this.envoyerPortLibre();
+			}
+			System.out.println("[negociationDePorts] : Connexion ok ! : \n\t>> " + recu);
+			String messagesSepares[] = recu.getContenu().split(";");
+			if(messagesSepares.length==2) {
+				this.futurPortTcpDistant = Integer.parseInt(messagesSepares[1]);
+				System.out.println("[negociationDePorts] : Port distant : " + this.futurPortTcpDistant);
+				System.out.println("[negociationDePorts] : La discussion peut conmmencer.");
+			}
+			// voir pourquoi recu incorrect
+			else {
+				System.out.println("[negociationDePorts] : recu incorrect, annulation negociation de ports");
+			}
+			//deconnexion
+			/*try {
+				this.tcp_send_thread.stop();
+			} catch (IOException e) {}*/
+		}
+		
+		// attendre la réponse du client, attendre son port
+	}
+	
+	private void envoyerPortLibre() {
+
+		this.futurPortTcpLocal = this.generateRandomPort();
+		System.out.println("port libre : " + this.futurPortTcpLocal);
+		if(this.tcp_ipDistant == null) {
 			// l'envoyer 
 			this.tcp_ipDistant = this.tcp_receive_thread.getIpDest();
 			try {
 				this.initTCPSendThread();
+				this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpLocal, MessageType.CONNECTIVITE));
+
 			} catch (IOException e) {
-				e.printStackTrace();
+				this.futurPortTcpLocal = 0;
 			}
-			this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpServ, MessageType.CONNECTIVITE));
 		}
-		else if (recu.getContenu().equals("DiscussionOK")) {
-			System.out.println("Connexion ok ! : \n\t>> " + recu);
+		else
+		{
+			this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpLocal, MessageType.CONNECTIVITE));
 		}
-		
-		
-		
-		
-		// attendre la réponse du client, attendre son port
 	}
 	
 	@Override
@@ -207,7 +255,7 @@ public class NetworkManager {
 	{
 		this.udp_send_thread.stop();
 		this.udp_receive_thread.stop();
-		//this.tcp_send_thread.stop();
+		this.tcp_send_thread.stop();
 		this.tcp_receive_thread.stop();
 		System.out.println("[Network Manager] : Fin network manager");
 	}
