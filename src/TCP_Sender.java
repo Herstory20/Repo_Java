@@ -21,6 +21,8 @@ public class TCP_Sender implements Runnable{
         System.out.println("Tentative de connexion sur " + this.ip + " ; "+ this.port);
         this.link = new Socket(this.ip, this.port);
         this.out = new PrintWriter(this.link.getOutputStream(),true);
+        if(this.link.isConnected())
+        	System.out.println("Connexion reussie !");
 	}
 	
 	public void setMessage(Message message)
@@ -39,6 +41,7 @@ public class TCP_Sender implements Runnable{
 	{
 		this.running = false;
         this.link.close();
+        this.out.close();
 	}
 
 

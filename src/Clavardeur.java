@@ -42,9 +42,17 @@ public class Clavardeur {
 			Thread t_udpsend = new Thread(tcp_send_thread);
 			t_udpsend.start();
 			
-			tcp_send_thread.setMessage(new Message("Coucou, je voudrais parler !", MessageType.COMMUNICATION));
+			//tcp_send_thread.setMessage(new Message("Coucou, je voudrais parler !", MessageType.COMMUNICATION));
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			tcp_send_thread.setMessage(new Message("Coucou, je voudrais parler !", MessageType.COMMUNICATION));
+			
+			try {
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
