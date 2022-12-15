@@ -60,6 +60,10 @@ public class TCP_Receiver implements Runnable{
 		} catch (IOException e) {
 		}
 	}
+	
+	public InetAddress getIpDest() {
+		return this.ipDest;
+	}
 
 	public synchronized void receive()  {
 		String tmp = null;

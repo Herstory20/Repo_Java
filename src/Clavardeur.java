@@ -40,22 +40,34 @@ public class Clavardeur {
 			
 			TCP_Sender tcp_send_thread = new TCP_Sender(ipToReach, portToReach);
 			Thread t_udpsend = new Thread(tcp_send_thread);
-			t_udpsend.start();
+
+			TCP_Receiver tcp_receive_thread = new TCP_Receiver(portToReach);
+			Thread t_udprcv = new Thread(tcp_receive_thread);
 			
-			//tcp_send_thread.setMessage(new Message("Coucou, je voudrais parler !", MessageType.COMMUNICATION));
+			t_udpsend.start();
+			t_udprcv.start();
+			
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {}
+			
+			tcp_send_thread.setMessage(new Message("Discussion", MessageType.COMMUNICATION));
+			
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {}
+			
+			Message recu;
+			recu = tcp_receive_thread.getMessage();
+			System.out.println("Message recu : " + recu);
+			System.out.println("reponse en cours....");
+			tcp_send_thread.setMessage(new Message("DiscussionOK:" + 123456789, MessageType.CONNECTIVITE));
+
+			
 			try {
 				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			} catch (InterruptedException e) {}
 			
-			tcp_send_thread.setMessage(new Message("Coucou, je voudrais parler !", MessageType.COMMUNICATION));
-			
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 			tcp_send_thread.stop();
 		}
 		else {

@@ -1,10 +1,13 @@
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class NetworkManager {
 	
@@ -17,14 +20,19 @@ public class NetworkManager {
 	private TCP_Receiver tcp_receive_thread;
 	
 	private InetAddress monIp;
+	private InetAddress tcp_ipDistant;
 	private static final int UDP_PORT = 1236;
 	private static final int TCP_PORT = 1237;
+	private int futurPortTcpServ, futurPortTcpClient;
 	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 1000;
 	private String pseudo;
 	private Hashtable<String, String> coordonneesUtilisateur;
 	
 	public NetworkManager() throws IOException {
 		this.pseudo = "";
+		this.tcp_ipDistant = null;
+		this.futurPortTcpServ = 0;
+		this.futurPortTcpClient = 0;
 		this.coordonneesUtilisateur = new Hashtable<String, String>();
 		this.setIPAddress();
 		
@@ -85,7 +93,7 @@ public class NetworkManager {
 			// mise a jour de l'annuaire
 			System.out.println("[NETWORK MANAGER] - connexion : Mise à jour de l'Annuaire...");
 			this.pseudo = pseudo;
-			this.initTCPRcvThreads();
+			this.initTCPRcvThread();
 		}
 		else {
 			System.out.println("[NETWORK MANAGER] - connexion : Echec de la mise à jour de l'Annuaire, pseudo invalidé par les autres utilisateurs");
@@ -107,9 +115,10 @@ public class NetworkManager {
 		}
 		
 		Message recuTcp = this.recevoirTCP();
+		// /!\ vérifier qu'on reçoive bien un paquet du meme ip pendant une co !
 		if(recuTcp != null) {
 			System.out.println("[NETWORK MANAGER] - update : MESSAGE TCP " + recuTcp + " RECU ! Réponse en cours...");
-			this.repondreTentativeConnexionTCP(recuTcp);
+			this.negociationDePorts(recuTcp);
 		}
 	}
 	
@@ -119,13 +128,21 @@ public class NetworkManager {
 	 * @throws IOException **/
 	
 	
-	private void initTCPRcvThreads() throws IOException {
+	private void initTCPRcvThread() throws IOException {
 		// TCP thread config
 		this.tcp_receive_thread = new TCP_Receiver(NetworkManager.TCP_PORT);
 		Thread t_tcprcv = new Thread(tcp_receive_thread);
-		//le thread d'envoi ne peut etre lancé que lorsqu'on sait à qui parler
 		
 		t_tcprcv.start();
+	}
+	
+
+	private void initTCPSendThread() throws IOException {
+		// TCP thread config
+		this.tcp_send_thread = new TCP_Sender(this.tcp_ipDistant, NetworkManager.TCP_PORT);
+		Thread t_tcpsend = new Thread(this.tcp_send_thread);
+		
+		t_tcpsend.start();
 	}
 	
 	private void repondreTentativeConnexionUDP(String recu) {
@@ -158,9 +175,31 @@ public class NetworkManager {
 		}
 	}
 	
-	private void repondreTentativeConnexionTCP(Message recu) {
-		System.out.println("[repondreTentativeConnexionTCP] : Réponse en cours à [ " + recu + " ]");
-
+	/* Négociation de port dans le cas du serveur => celui qui reçoit la demande de connexion */
+	private void negociationDePorts(Message recu) {
+		System.out.println("[negociationDePorts] : Réponse en cours à [ " + recu + " ]");
+		// mettre des états éventuellement : ATTENTE REPONSE
+		// chercher un port de libre
+		if(recu.getContenu().equals("Discussion") && this.futurPortTcpServ == 0) {
+			this.futurPortTcpServ = this.generateRandomPort();
+			System.out.println("port libre : " + this.futurPortTcpServ);
+			// l'envoyer 
+			this.tcp_ipDistant = this.tcp_receive_thread.getIpDest();
+			try {
+				this.initTCPSendThread();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpServ, MessageType.CONNECTIVITE));
+		}
+		else if (recu.getContenu().equals("DiscussionOK")) {
+			System.out.println("Connexion ok ! : \n\t>> " + recu);
+		}
+		
+		
+		
+		
+		// attendre la réponse du client, attendre son port
 	}
 	
 	@Override
@@ -302,5 +341,25 @@ public class NetworkManager {
     	    }
     	}
     }
+    
+    private int generateRandomPort() {
+        ServerSocket s = null;
+        try {
+             // ServerSocket(0) results in availability of a free random port
+             s = new ServerSocket(0);
+             int port = s.getLocalPort();
+             s.close();
+             return port;
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+               } finally {
+              assert s != null;
+           try {
+                  s.close();
+               } catch (IOException e) {
+                   e.printStackTrace();
+               }
+            }
+        }
     
 }
