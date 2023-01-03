@@ -1,62 +1,96 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.border.EmptyBorder;
-/**
- *
- *
- */
-public class LoginScreen implements ActionListener  {
+
+public class Home extends JFrame {
+	
+	//Specify the look and feel to use.  Valid values:
+    //null (use the default), "Metal", "System", "Motif", "GTK+"
+    final static String LOOKANDFEEL = "GTK+";
     
     private JTextField textField;
-    private JLabel label =new JLabel("Attention !! Pas de caractères spéciaux !", JLabel.CENTER);
-    private JButton button;
+    private JLabel label =new JLabel("!");
     private JPanel pane;
+    private JButton button;
     private GraphicsConfiguration gc;
     private static JFrame frame ;
     
-    //Specify the look and feel to use.  Valid values:
-    //null (use the default), "Metal", "System", "Motif", "GTK+"
-    final static String LOOKANDFEEL = "System";
     
     public Component createComponents() {
-        pane = new JPanel();
-        pane.setLayout(new GridLayout(4,1));
+    	pane = new JPanel();
+    	pane.setBackground(Color.PINK);
+        pane.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
         
-        JLabel consigne = new JLabel("Entrez un pseudo pour cette connexion!",
-                           JLabel.CENTER);
-        consigne.setFont(new Font("Tahoma", Font.PLAIN, 20));
-        pane.add(consigne);
+        JPanel Chatview = new JPanel();
         
-        JPanel pane2= new JPanel();
-        pane2.setLayout(new GridLayout(1,2));
-        JLabel lblLogin= new JLabel("Login",JLabel.CENTER);
-        lblLogin.setFont(new Font("Tahoma", Font.PLAIN,20));
-        pane2.add(lblLogin);
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = new Insets(5,5,5,5);
+        
+        c.gridx = 4;
+        c.gridy = 0;
+        c.gridwidth=1;
+        c.gridheight=3;
+        c.weightx = 1.0;
+        c.weighty=1.0;
+        pane.add(Chatview,c);
+        
+        JPanel paneUtilisateur = new JPanel();
+        paneUtilisateur.setLayout(new GridLayout(13,1));
+        for (int r=0 ; r<50 ;r++) {
+        	button = new JButton("Nom");
+        	button.setBackground(Color.CYAN);
+        	button.setFont(new Font("normal",Font.PLAIN,12));
+        	button.addActionListener(null);
+        	paneUtilisateur.add(button);
+        }
+        JScrollPane scrlpane = new JScrollPane(paneUtilisateur);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth=3;
+        c.gridheight=3;
+        c.weightx = 0.1;
+        c.weighty=0.0;
+        pane.add(scrlpane,c);
+        
+        JButton cpseudo = new JButton("Change");
+        cpseudo.setBackground(Color.GRAY);
+        cpseudo.setFont(new Font("normal", Font.ITALIC,8));
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth=3;
+        c.gridheight=1;
+        c.weightx = 0.0;
+        c.weighty=0.0;
+        pane.add(cpseudo,c);
+        
+        button = new JButton("Envoyer");
+        button.setBackground(Color.GRAY);
+        button.setFont(new Font("normal", Font.ITALIC,8));
+        button.addActionListener(null);
+        c.gridx = 0;
+        c.gridy = 4;
+        c.gridwidth=3;
+        c.gridheight=1;
+        c.weightx = 0.0;
+        c.weighty=0.0;
+        pane.add(button,c);
+        
         textField = new JTextField();
         textField.setFont(new Font("Tahoma", Font.PLAIN, 32));
-        pane2.add(textField);
-        pane.add(pane2);
-        
-        label.setFont(new Font("Tahoma", Font.PLAIN, 15));
-        pane.add(label);
-        
-        button = new JButton("Se connecter");
-        button.setFont(new Font("Tahoma", Font.PLAIN,20));
-        button.addActionListener(this);
-        pane.add(button);
-        return pane;
+        c.gridx = 3;
+        c.gridy = 3;
+        c.gridwidth=2;
+        c.gridheight=2;
+        c.weightx = 0.0;
+        c.weighty=0.1;
+        pane.add(textField,c);
+    	return pane;
     }
     
-    @Override
     public void actionPerformed(ActionEvent ae) {
         String userName = textField.getText();
         Pattern p = Pattern.compile("[^A-Za-z0-9]");
@@ -130,35 +164,32 @@ public class LoginScreen implements ActionListener  {
             }
         }
     }
-    
-    private static void createAndShowGUI() {
+	
+	public static void createAndShowGUI() {
         //Set the look and feel.
         initLookAndFeel();
         
         //Make sure we have nice window decorations.
         JFrame.setDefaultLookAndFeelDecorated(true);
         //Create and set up the window.
-        frame = new JFrame("Connexion");
+        JFrame frame = new JFrame("Clavardeur");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
-        frame.setBounds((int)size.getWidth()/2-800/2, (int)size.getHeight()/2-450/2, 800, 450);
-        LoginScreen app = new LoginScreen();
+        frame.setBounds((int)size.getWidth()/2-1280/2, (int)size.getHeight()/2-720/2, 1280, 720);
+        Home app = new Home();
         Component contents = app.createComponents();
-        frame.getContentPane().add(contents, BorderLayout.CENTER);
+        frame.getContentPane().add(contents);
+        
         //Display the window.
         frame.setVisible(true);
     }
-    
-    
-    
-    public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
-    }
-    
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		 javax.swing.SwingUtilities.invokeLater(new Runnable() {
+	        public void run() {
+	        	createAndShowGUI();
+	        }
+		 });
+	}
 }

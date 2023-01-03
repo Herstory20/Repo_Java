@@ -95,6 +95,19 @@ public class JDBC {
 	           }
 	   }
    
+   public void updateport(String ip, String port) {
+	      String sql = "UPDATE Annuaire SET port=? where ip=?";
+	      try (Connection conn = this.connect();
+	   		PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	           pstmt.setString(1,ip);
+	           pstmt.setString(2,port);
+	           pstmt.executeUpdate();
+	           } catch (SQLException e) {
+	               System.out.println(e.getMessage());
+	           }
+	   }
+
+   
    /**
     * Delete a Contact specified by the ip
     *
@@ -281,6 +294,17 @@ public class JDBC {
     }
     
     
+    public void updatedate(int id, String date) {
+	      String sql = "UPDATE Messages SET date=? where id=?";
+	      try (Connection conn = this.connect();
+	   		PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	           pstmt.setInt(1,id);
+	           pstmt.setString(2,date);
+	           pstmt.executeUpdate();
+	           } catch (SQLException e) {
+	               System.out.println(e.getMessage());
+	           }
+	   }
     /**
      * @param args the command line arguments
      */
@@ -293,11 +317,14 @@ public class JDBC {
         app.insertM(4, "Je suis tellement débordé avec ce projet de chat.","192.168.12.1","192.168.10.1");
         app.selectAllM();
         app.deleteM(3);
+        app.updatedate(4, "20/12/2022");
         app.selectAllM();
         app.deleteM(4);
         app.selectAllM();
         app.insertA("192.168.10.1","Herstory","6002");
         app.insertAwithoutP("192.168.12.1","Lemonade");
+        app.selectAllA();
+        app.updateport("192.168.12.1", "2003");
         app.selectAllA();
         if (app.IsLoginUsed("Herstory")) {
         	System.out.println("Yes, It's used\n");
