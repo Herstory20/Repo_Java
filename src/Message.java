@@ -3,6 +3,7 @@ public class Message {
 	private String contenu;
 	private MessageType type;
 	private byte[] trame;	// trame à envoyer en bytes
+	// TODO : ajouter l'horodatage !
 	
 	public Message (String contenu, MessageType type) {
 		this.contenu = contenu;

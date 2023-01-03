@@ -19,6 +19,8 @@ public class NetworkManager {
 	private TCP_Sender tcp_send_thread;
 	private TCP_Receiver tcp_receive_thread;
 	
+	private ConversationsManager convManager;
+	
 	private InetAddress monIp;
 	private InetAddress tcp_ipDistant;
 	private static final int UDP_PORT = 1236;
@@ -35,6 +37,7 @@ public class NetworkManager {
 		this.futurPortTcpDistant = 0;
 		this.coordonneesUtilisateur = new Hashtable<String, String>();
 		this.setIPAddress();
+		this.convManager = ConversationsManager.getInstance();
 		
 		// UDP thread config
 		this.udp_send_thread = UDP_Sender.getInstance(null, NetworkManager.UDP_PORT);
@@ -71,6 +74,7 @@ public class NetworkManager {
 						if(coord[2] == "OK")
 						{
 							this.coordonneesUtilisateur.put(coord[0], coord[1]);
+							// à ajouter dans la bdd aussi !
 						}
 						else {
 							System.out.println("Coordonnees recues erronnees");
@@ -187,6 +191,7 @@ public class NetworkManager {
 					// On stocke son IP et son PSEUDO dans l'Annuaire
 					if(coord[2].equals("OK")) {
 						System.out.println("MAJ de la table Annuaire ...");
+						// mettre a jour la bdd (avec port null !)
 					}
 				} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
 					e.printStackTrace();
@@ -197,6 +202,7 @@ public class NetworkManager {
 		}
 	}
 	
+	
 	// fonction qui s'applique :
 	//		- au serveur (celui à qui on demande une connexion)
 	//		- au client  (celui qui demande la connexion)
@@ -205,7 +211,13 @@ public class NetworkManager {
 		// si on a recu "Discussion", c'est une premiere demande de discussion
 		//	=> on répond par un de notre port qui est libre
 		if(recu.getContenu().equals("Discussion") && this.futurPortTcpLocal == 0) {
-			this.envoyerPortLibre();
+			try {
+				this.mettreAJourTcpIpDistant();
+				this.envoyerPortLibre();
+			} catch (IOException e) {
+				this.annulationNegociationPorts();
+				System.out.println("Annulation de la négiciation de ports");
+			}
 		}
 		// sinon, si on reçoit "DiscussionOK", c'est que :
 		//		- nous sommes client, auquel cas le serveur nous a dit ok suite à "Discussion"
@@ -224,35 +236,63 @@ public class NetworkManager {
 			if(messagesSepares.length==2) {
 				this.futurPortTcpDistant = Integer.parseInt(messagesSepares[1]);
 				System.out.println("[negociationDePorts] : Port distant : " + this.futurPortTcpDistant);
-				System.out.println("[negociationDePorts] : La discussion peut conmmencer.");
-				
+				try {
+					this.convManager.setPortDistantConversation(this.tcp_ipDistant, this.futurPortTcpDistant);
+					this.tcp_receive_thread.fermerConnexion();
+					this.tcp_send_thread.stop();
+					// ajouter le port dans la BDD
+					this.convManager.lancerConversation(this.tcp_ipDistant);
+					System.out.println("[negociationDePorts] : La discussion peut conmmencer.");
+					this.convManager.sendSomething(this.tcp_ipDistant);
+				} catch (ConversationNotFound e) {
+					this.annulationNegociationPorts();
+					System.out.println("[negociationDePorts] : Erreur d'ajout de port distant, annulation de la négociation de ports");
+				}
 			}
 			// voir pourquoi recu incorrect
 			else {
+				this.annulationNegociationPorts();
 				System.out.println("[negociationDePorts] : recu incorrect, annulation negociation de ports");
 			}
 		}
 	}
 	
-	private void envoyerPortLibre() {
-
-		this.futurPortTcpLocal = this.generateRandomPort();
-		System.out.println("port libre : " + this.futurPortTcpLocal);
+	private void mettreAJourTcpIpDistant() throws IOException {
+		// dans le cas où on est serveur, c'est-à-dire où quelqu'un nous demande la connexion,
+		//	on récupère son ip
 		if(this.tcp_ipDistant == null) {
-			// l'envoyer 
 			this.tcp_ipDistant = this.tcp_receive_thread.getIpDest();
 			try {
 				this.initTCPSendThread();
-				this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpLocal, MessageType.CONNECTIVITE));
-
 			} catch (IOException e) {
-				this.futurPortTcpLocal = 0;
+				System.out.println("[mettreAJourTcpIpDistant] : Destinataire injoignable");
+				throw e;
 			}
 		}
-		else
-		{
-			this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpLocal, MessageType.CONNECTIVITE));
-		}
+	}
+	
+	private void annulationNegociationPorts() {
+		this.futurPortTcpLocal = 0;
+		this.futurPortTcpLocal = 0;
+		this.tcp_receive_thread.fermerConnexion();
+		this.tcp_send_thread.stop();
+		// réinitialiser l'instance de Conversation
+	}
+	
+	private void envoyerPortLibre() {
+		boolean resReservationPort;
+		do {
+				
+			this.futurPortTcpLocal = this.generateRandomPort();
+			// on réserve le port directement avec ConversationManager
+			resReservationPort = this.convManager.creerConversation(this.tcp_ipDistant, this.futurPortTcpLocal);
+			
+		}while(!resReservationPort);
+		
+		System.out.println("port libre : " + this.futurPortTcpLocal);
+		
+		// si tout s'est bien passé, on envoie DiscussionOK avec le port concerné.
+		this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpLocal, MessageType.CONNECTIVITE));
 	}
 	
 	@Override

@@ -52,12 +52,14 @@ public class TCP_Receiver implements Runnable{
         this.fermerConnexion();
 	}
 	
-	private void fermerConnexion() {
+	public void fermerConnexion() {
         try {
-			this.link.close();
-	        this.in.close();
 			this.connected = false;
+	        this.in.close();
+			this.link.close();
+			System.out.println("[TCP_Receiver] : Connexion Fermée !");
 		} catch (IOException e) {
+			System.out.println("[TCP_Receiver] : Connexion déjà fermée !");
 		}
 	}
 	

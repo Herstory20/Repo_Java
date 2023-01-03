@@ -37,11 +37,14 @@ public class TCP_Sender implements Runnable{
 		}
 	}
 
-	public void stop() throws IOException
+	public void stop()
 	{
 		this.running = false;
-        this.link.close();
         this.out.close();
+        try {
+			this.link.close();
+		} catch (IOException e) {
+		}
 	}
 
 
