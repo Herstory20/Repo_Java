@@ -197,36 +197,41 @@ public class NetworkManager {
 		}
 	}
 	
-	/* Négociation de port dans le cas du serveur => celui qui reçoit la demande de connexion */
+	// fonction qui s'applique :
+	//		- au serveur (celui à qui on demande une connexion)
+	//		- au client  (celui qui demande la connexion)
 	private void negociationDePorts(Message recu) {
 		System.out.println("[negociationDePorts] : Réponse en cours à [ " + recu + " ]");
-		// mettre des états éventuellement : ATTENTE REPONSE
-		// chercher un port de libre
+		// si on a recu "Discussion", c'est une premiere demande de discussion
+		//	=> on répond par un de notre port qui est libre
 		if(recu.getContenu().equals("Discussion") && this.futurPortTcpLocal == 0) {
 			this.envoyerPortLibre();
 		}
+		// sinon, si on reçoit "DiscussionOK", c'est que :
+		//		- nous sommes client, auquel cas le serveur nous a dit ok suite à "Discussion"
+		//		  et nous a envoyé son port libre ; il attend le notre
+		//		- nous sommes serveur, et nous reçevons la réponse dont nous parlions ci-dessus
+		//		  que le client nous envoie avec son port libre.
+		// si les messages reçus ont un format et des informations valides, la connexion est 
+		//	lancée via le threadManager (il ouvrira une connexion TCP spécifiquement pour 
+		//	cette discussion)
 		else if (recu.getContenu().contains("DiscussionOK")) {
 			if(this.futurPortTcpLocal == 0) {
 				this.envoyerPortLibre();
 			}
 			System.out.println("[negociationDePorts] : Connexion ok ! : \n\t>> " + recu);
-			String messagesSepares[] = recu.getContenu().split(";");
+			String messagesSepares[] = recu.getContenu().split(":");
 			if(messagesSepares.length==2) {
 				this.futurPortTcpDistant = Integer.parseInt(messagesSepares[1]);
 				System.out.println("[negociationDePorts] : Port distant : " + this.futurPortTcpDistant);
 				System.out.println("[negociationDePorts] : La discussion peut conmmencer.");
+				
 			}
 			// voir pourquoi recu incorrect
 			else {
 				System.out.println("[negociationDePorts] : recu incorrect, annulation negociation de ports");
 			}
-			//deconnexion
-			/*try {
-				this.tcp_send_thread.stop();
-			} catch (IOException e) {}*/
 		}
-		
-		// attendre la réponse du client, attendre son port
 	}
 	
 	private void envoyerPortLibre() {
