@@ -11,26 +11,26 @@ import java.util.List;
 
 public class UDP_Sender implements Runnable{
 
-	private DatagramSocket socket;
-	private InetAddress ip;
-	private InetAddress broadcastAddress;
-	private int port;
-	private Message message;	//l'objet message est partagé
+	private static DatagramSocket socket;
+	private static InetAddress ip;
+	private static InetAddress broadcastAddress;
+	private static int port;
+	private static Message message;	//l'objet message est partagé
 	private static UDP_Sender instance;
 	private static boolean running;
-	private boolean broadcastMode;
-	private int tentativesEnvoi;
+	private static boolean broadcastMode;
+	private static int tentativesEnvoi;
 	private static final int MAX_TENTATIVES = 15;
 	
 	private UDP_Sender(InetAddress ip, int port) throws SocketException {
-		this.socket = new DatagramSocket();
-		this.ip = ip;
-		this.port = port;
-		this.message = null;
+		UDP_Sender.socket = new DatagramSocket();
+		UDP_Sender.ip = ip;
+		UDP_Sender.port = port;
+		UDP_Sender.message = null;
 		UDP_Sender.running = true;
 		this.loadBroadcastAddress();
-		this.broadcastMode = false;
-		this.tentativesEnvoi = 0;
+		UDP_Sender.broadcastMode = false;
+		UDP_Sender.tentativesEnvoi = 0;
 	}
 	
 	private void loadBroadcastAddress() throws SocketException
@@ -43,74 +43,71 @@ public class UDP_Sender implements Runnable{
 			InterfaceAddress ia = it.next();
 			if(ia.getBroadcast() != null)
 			{
-				this.broadcastAddress = ia.getBroadcast();
+				UDP_Sender.broadcastAddress = ia.getBroadcast();
 				//break; non nécessaire mais possible
 				//s'il y a plus de résultats, le dernier serait sélectionné
 			}
 		}
-		System.out.println("@ broadcast : " + this.broadcastAddress);
+		System.out.println("@ broadcast : " + UDP_Sender.broadcastAddress);
 	}
 
 	public static UDP_Sender getInstance(InetAddress ip, int port) throws SocketException
 	{
 		if (UDP_Sender.instance == null)
 		{
-			return new UDP_Sender(ip, port);
+			UDP_Sender.instance = new UDP_Sender(ip, port);
 		}
-		else
-		{
-			return UDP_Sender.instance;
-		}
+		return UDP_Sender.instance;
 	}
 	
 	public void setMessage(Message message)
 	{
-		this.message = message;
+		UDP_Sender.message = message;
 	}
 	
 	public void setIp(InetAddress ip) {
-		this.ip = ip;
+		UDP_Sender.ip = ip;
 	}
 	
 	public void setBroadcastEnabled()
 	{
-		this.broadcastMode = true;
+		UDP_Sender.broadcastMode = true;
 	}
 
 	public void setBroadcastDisabled()
 	{
-		this.broadcastMode = false;
+		UDP_Sender.broadcastMode = false;
 	}
 	
 	public void stop()
 	{
 		UDP_Sender.running = false;
-	    this.socket.close();
+	    UDP_Sender.socket.close();
 	    try {
-	    	this.socket.setSoTimeout(1);
+	    	UDP_Sender.socket.setSoTimeout(1);
 	    } catch (SocketException e) {}
-	    this.socket.disconnect();
-	    this.socket = null;
+	    UDP_Sender.socket.disconnect();
+	    UDP_Sender.socket = null;
 	}
 	
 	private synchronized void send() throws IOException
 	{
-        byte buf[] = this.message.getTrame();
-		DatagramPacket DpSend = new DatagramPacket(buf, buf.length, this.ip, this.port);
-		this.socket.send(DpSend);
-		this.message = null;
+        byte buf[] = UDP_Sender.message.getTrame();
+		DatagramPacket DpSend = new DatagramPacket(buf, buf.length, UDP_Sender.ip, UDP_Sender.port);
+		UDP_Sender.socket.send(DpSend);
+		UDP_Sender.message = null;
 	}
 
     public void broadcast() throws IOException {
-        this.socket.setBroadcast(true);
+        UDP_Sender.socket.setBroadcast(true);
 
-        byte[] buffer = this.message.getTrame();
+        byte[] buffer = UDP_Sender.message.getTrame();
 
-        DatagramPacket DpBroadCastSend = new DatagramPacket(buffer, buffer.length, InetAddress.getByName("255.255.255.255"), this.port);
-        System.out.println("message : " + this.message.getTrameString() + " - port : " + this.port);
-        this.socket.send(DpBroadCastSend);
+        DatagramPacket DpBroadCastSend = new DatagramPacket(buffer, buffer.length, InetAddress.getByName("255.255.255.255"), UDP_Sender.port);
+        System.out.println("message : " + UDP_Sender.message.getTrameString() + " - port : " + UDP_Sender.port);
+        UDP_Sender.socket.send(DpBroadCastSend);
         socket.setBroadcast(false);
-		this.message = null;
+		UDP_Sender.message = null;
     }
 	
 	
@@ -120,28 +117,28 @@ public class UDP_Sender implements Runnable{
 		System.out.println("[UDP_Sender] : running");
 		while(UDP_Sender.running)
 		{
-			if(this.message != null)	//un message doit etre envoyé
+			if(UDP_Sender.message != null)	//un message doit etre envoyé
 			{
 				try {
-					System.out.println("[UDP_Sender] : Demande d'envoi de \"" + this.message.getContenu() + "\" en mode [" + this.message.getType() + "]...");
-					this.tentativesEnvoi++; 
-					if(this.broadcastMode)
+					System.out.println("[UDP_Sender] : Demande d'envoi de \"" + UDP_Sender.message.getContenu() + "\" en mode [" + UDP_Sender.message.getType() + "]...");
+					UDP_Sender.tentativesEnvoi++; 
+					if(UDP_Sender.broadcastMode)
 					{
 						this.broadcast();
 					}
 					else {
 						this.send();
 					}
-					this.tentativesEnvoi = 0;
+					UDP_Sender.tentativesEnvoi = 0;
 					System.out.println("[UDP_Sender] : Message envoyé !");
 				} catch (IOException e) {
 					System.out.println("[UDP_Sender] : Echec de l'envoi !");
 					e.printStackTrace();
 				}
-				if(this.tentativesEnvoi > UDP_Sender.MAX_TENTATIVES)
+				if(UDP_Sender.tentativesEnvoi > UDP_Sender.MAX_TENTATIVES)
 				{
-					this.message = null;
-					this.tentativesEnvoi = 0;
+					UDP_Sender.message = null;
+					UDP_Sender.tentativesEnvoi = 0;
 				}
 			}
 			

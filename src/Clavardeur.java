@@ -2,14 +2,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-
+import java.util.Scanner;
 public class Clavardeur {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ConversationNotFound {
 		
-		InetAddress ipToReach;
-		
+		InetAddress ipToReach = null;
 		String pseudo = "";
+		boolean messageSent = false;
+		Scanner sc = new Scanner(System.in);
+		
 		if(args.length == 1)
 		{
 			pseudo = args[0];
@@ -25,11 +27,23 @@ public class Clavardeur {
 				System.exit(0);
 			}
 			
-			
 			System.out.println("Ecoute :\n>>");
 			while(connexionOK)
 			{
 				nm.update();
+				if(nm.getTcp_ipDistant() != null && ipToReach == null) {
+					ipToReach = nm.getTcp_ipDistant();
+				}
+				if(ConversationsManager.getInstance().isConversationExist(ipToReach) && !messageSent) {
+
+					if(ConversationsManager.getInstance().isConversationOpen(ipToReach))
+					{
+						System.out.print(">>Enter your message :");
+						String input = sc.nextLine();
+						System.out.print(">> The following message will be sent : " + input);
+						ConversationsManager.getInstance().send(ipToReach, input);
+					}
+				}
 			}
 		}
 		if(args.length == 2)	// cas d'une machine voulant lancer une conversation
@@ -53,6 +67,16 @@ public class Clavardeur {
 			while(connexionOK)
 			{
 				nm.update();
+				if(ConversationsManager.getInstance().isConversationExist(ipToReach) && !messageSent) {
+
+					if(ConversationsManager.getInstance().isConversationOpen(ipToReach))
+					{
+						System.out.print(">>Enter your message :");
+						String input = sc.nextLine();
+						System.out.print(">> The following message will be sent : " + input);
+						ConversationsManager.getInstance().send(ipToReach, input);
+					}
+				}
 			}
 		}
 		else {

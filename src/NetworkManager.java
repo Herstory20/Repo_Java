@@ -203,6 +203,10 @@ public class NetworkManager {
 	}
 	
 	
+	public InetAddress getTcp_ipDistant() {
+		return tcp_ipDistant;
+	}
+
 	// fonction qui s'applique :
 	//		- au serveur (celui à qui on demande une connexion)
 	//		- au client  (celui qui demande la connexion)
@@ -242,8 +246,7 @@ public class NetworkManager {
 					this.tcp_send_thread.stop();
 					// ajouter le port dans la BDD
 					this.convManager.lancerConversation(this.tcp_ipDistant);
-					System.out.println("[negociationDePorts] : La discussion peut conmmencer.");
-					this.convManager.sendSomething(this.tcp_ipDistant);
+					System.out.println("[negociationDePorts] : La discussion peut commencer.");
 				} catch (ConversationNotFound e) {
 					this.annulationNegociationPorts();
 					System.out.println("[negociationDePorts] : Erreur d'ajout de port distant, annulation de la négociation de ports");
