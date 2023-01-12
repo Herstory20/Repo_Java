@@ -21,6 +21,11 @@ public class JDBC {
      */
     private Connection connect() {
         // SQLite connection string
+    	try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+		}
         String url = "jdbc:sqlite:data/BDD.db";
         Connection conn = null;
         try {
@@ -332,7 +337,7 @@ public class JDBC {
         if (app.IsLoginUsed("Herstory")) {
         	System.out.println("Yes, It's used\n");
         }else System.out.println("No, It's free\n");
-        app.deleteA("192.168.10.1");
+        //app.deleteA("192.168.10.1");
         app.deleteA("192.168.12.1");
     }
 

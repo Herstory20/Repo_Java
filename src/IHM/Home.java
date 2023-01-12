@@ -4,11 +4,14 @@ package IHM;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.border.EmptyBorder;
 
 import BDD.JDBC;
+import Network.NetworkManager;
+import Network.UDP.UDP_Sender;
 
 public class Home extends JFrame {
 	
@@ -22,6 +25,7 @@ public class Home extends JFrame {
     private JButton button;
     private GraphicsConfiguration gc;
     private static JFrame frame ;
+    private static NetworkManager nm;
     
     
     public Component createComponents() {
@@ -169,10 +173,21 @@ public class Home extends JFrame {
             }
         }
     }
+    
+    private static void initNetwork() {
+		try {
+			nm = NetworkManager.getInstance();
+			Thread threadNetworkManager = new Thread(nm);
+			threadNetworkManager.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
 	
 	public static void createAndShowGUI() {
         //Set the look and feel.
         initLookAndFeel();
+        initNetwork();
         
         //Make sure we have nice window decorations.
         JFrame.setDefaultLookAndFeelDecorated(true);

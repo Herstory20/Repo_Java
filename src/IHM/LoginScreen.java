@@ -4,15 +4,16 @@ package IHM;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.border.EmptyBorder;
-
 import BDD.JDBC;
 /**
  *
  *
  */
+import Network.NetworkManager;
+import Network.Exceptions.InvalidPseudoException;
 public class LoginScreen implements ActionListener  {
     
     private JTextField textField;
@@ -21,6 +22,7 @@ public class LoginScreen implements ActionListener  {
     private JPanel pane;
     private GraphicsConfiguration gc;
     private static JFrame frame ;
+    private static NetworkManager nm;
     
     //Specify the look and feel to use.  Valid values:
     //null (use the default), "Metal", "System", "Motif", "GTK+"
@@ -55,6 +57,25 @@ public class LoginScreen implements ActionListener  {
         return pane;
     }
     
+    private static void initNetwork() {
+		try {
+			nm = NetworkManager.getInstance();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    private static boolean tryConnexion(String pseudo) throws InvalidPseudoException {
+		boolean connexionOK = false;
+		try {
+			connexionOK = nm.connexion(pseudo);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return connexionOK;
+    }
+    
     @Override
     public void actionPerformed(ActionEvent ae) {
         String userName = textField.getText();
@@ -74,11 +95,17 @@ public class LoginScreen implements ActionListener  {
         else {
         	JDBC app = new JDBC();
         	if (!app.IsLoginUsed(userName)) {
-        		frame.dispose();
-                Home Inter = new Home();
-                Inter.createAndShowGUI();
-                Inter.setVisible(true);
-        		JOptionPane.showMessageDialog(button, "You have successfully logged ");
+        		try {
+					tryConnexion(userName);
+	        		frame.dispose();
+	                Home Inter = new Home();
+	                Home.createAndShowGUI();
+	                Inter.setVisible(true);
+	        		JOptionPane.showMessageDialog(button, "You have successfully logged ");
+				} catch (InvalidPseudoException e) {
+		        	label.setText("<html>Erreur !! Pseudo invalidé par un autre utilisateur.</html>");
+				}
+        		
         	}
         	else {
         		label.setForeground(Color.GREEN);
@@ -130,7 +157,7 @@ public class LoginScreen implements ActionListener  {
         }
     }
     
-    private static void createAndShowGUI() {
+    public static void createAndShowGUI() {
         //Set the look and feel.
         initLookAndFeel();
         
@@ -142,20 +169,19 @@ public class LoginScreen implements ActionListener  {
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setBounds((int)size.getWidth()/2-800/2, (int)size.getHeight()/2-450/2, 800, 450);
         LoginScreen app = new LoginScreen();
+        initNetwork();
         Component contents = app.createComponents();
         frame.getContentPane().add(contents, BorderLayout.CENTER);
         //Display the window.
         frame.setVisible(true);
     }
     
-    
-    
-    public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
+    public static void launch() {
+    	//Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                createAndShowGUI();
+            	LoginScreen.createAndShowGUI();
             }
         });
     }

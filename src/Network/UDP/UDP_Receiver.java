@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
-
 import Message.Message;
 
 public class UDP_Receiver implements Runnable{
@@ -31,12 +29,9 @@ public class UDP_Receiver implements Runnable{
 	{
 		if (UDP_Receiver.instance == null)
 		{
-			return new UDP_Receiver(port);
+			UDP_Receiver.instance = new UDP_Receiver(port);
 		}
-		else
-		{
-			return UDP_Receiver.instance;
-		}
+		return UDP_Receiver.instance;
 	}
 	
 	public synchronized String getMessageString()

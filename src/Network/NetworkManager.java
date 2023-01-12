@@ -1,7 +1,6 @@
 package Network;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -24,9 +23,8 @@ import Message.Exceptions.InvalidMessageFormatException;
 
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
-import java.net.Socket;
 
-public class NetworkManager {
+public class NetworkManager implements Runnable{
 	
 	// threads udp pour connexion
 	private UDP_Sender udp_send_thread;
@@ -46,9 +44,23 @@ public class NetworkManager {
 	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 1000;
 	private String pseudo;
 	private Hashtable<String, String> coordonneesUtilisateur;
+	private static NetworkManager instance;
+	private static boolean connected;
+	private static boolean running;
 	
-	public NetworkManager() throws IOException {
+	public static NetworkManager getInstance() throws IOException
+	{
+		if (NetworkManager.instance == null)
+		{
+			NetworkManager.instance = new NetworkManager();
+		}
+		return NetworkManager.instance;
+	}
+	
+	private NetworkManager() throws IOException {
 		this.pseudo = "";
+		NetworkManager.connected = false;
+		NetworkManager.running = true;
 		this.tcp_ipDistant = null;
 		this.futurPortTcpLocal = 0;
 		this.futurPortTcpDistant = 0;
@@ -66,9 +78,15 @@ public class NetworkManager {
 		t_udpsend.start();
 		t_udprcv.start();	
 	}
+
 	
+	public void stop()
+	{
+		NetworkManager.running = false;
+	}
+
 	public boolean connexion(String pseudo) throws InvalidPseudoException, IOException {
-		boolean success = true;
+		NetworkManager.connected = true;
 		// envoi des informations de connexion
 		String message = "Bonjour;" + monIp.getHostAddress() + ";" + pseudo;
 		this.udp_send_thread.setBroadcastEnabled();
@@ -95,7 +113,7 @@ public class NetworkManager {
 						}
 						else {
 							System.out.println("Coordonnees recues erronnees");
-							success = false;
+							NetworkManager.connected = false;
 						}
 					} catch (InvalidMessageFormatException | InvalidIpException e) {
 						// TODO Auto-generated catch block
@@ -110,7 +128,7 @@ public class NetworkManager {
 		
 		System.out.println("[NETWORK MANAGER] - connexion : Coordonnees recues : \n" + this.coordonneesUtilisateur);
 		
-		if(success) {
+		if(NetworkManager.connected) {
 			// mise a jour de l'annuaire
 			System.out.println("[NETWORK MANAGER] - connexion : Mise à jour de l'Annuaire...");
 			this.pseudo = pseudo;
@@ -124,10 +142,27 @@ public class NetworkManager {
 		udp_send_thread.setBroadcastDisabled();
 		
 		System.out.println("[NETWORK MANAGER] - connexion : Fin connexion");
-		return success;
+		return NetworkManager.connected;
 	}
 	
 
+	@Override
+	public void run() {
+		System.out.println("[NetworkManager] : running");
+		while(NetworkManager.running)
+		{
+			if(NetworkManager.connected) {
+				this.update();
+			}
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+			}
+		}
+		System.out.println("[NetworkManager] : end of run");
+	}
+		
+	
 	public void update() {
 		String recuUdp = this.recevoirUDP();
 		if(!recuUdp.isEmpty()) {
@@ -440,11 +475,11 @@ public class NetworkManager {
     }
     
     private void setIPAddress() throws SocketException {
-    	Enumeration e = NetworkInterface.getNetworkInterfaces();
+    	Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces();
     	if(e.hasMoreElements())
     	{
     	    NetworkInterface n = (NetworkInterface) e.nextElement();
-    	    Enumeration ee = n.getInetAddresses();
+    	    Enumeration<InetAddress> ee = n.getInetAddresses();
     	    if (ee.hasMoreElements())
     	    {
     	        InetAddress i = (InetAddress) ee.nextElement();
@@ -474,5 +509,6 @@ public class NetworkManager {
                }
             }
         }
+
     
 }

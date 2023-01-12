@@ -1,26 +1,29 @@
 
-import java.io.IOException;
-import IHM.*;
+package Network;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Scanner;
+
+import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
+import Network.Exceptions.InvalidPseudoException;
 public class Clavardeur {
 
 	public static void main(String[] args) throws IOException, ConversationNotFound {
 		
-	    
-        LoginScreen.launch();
-		
-		/*
 		InetAddress ipToReach = null;
 		String pseudo = "";
 		boolean messageSent = false;
 		Scanner sc = new Scanner(System.in);
+		NetworkManager nm;
 		
 		if(args.length == 1)
 		{
 			pseudo = args[0];
 
-			NetworkManager nm = new NetworkManager();
+			nm = NetworkManager.getInstance();
+			
 			boolean connexionOK = false;
 			try {
 				connexionOK = nm.connexion(pseudo);
@@ -55,7 +58,7 @@ public class Clavardeur {
 			pseudo = args[0];
 			ipToReach = InetAddress.getByName(args[1]);
 
-			NetworkManager nm = new NetworkManager();
+			nm = NetworkManager.getInstance();
 			boolean connexionOK = false;
 			try {
 				connexionOK = nm.connexion(pseudo);
@@ -87,6 +90,6 @@ public class Clavardeur {
 			System.out.println("argument PSEUDO manquant");
 			System.exit(0);
 		}
-		sc.close();*/
+		sc.close();
 	}
 }
