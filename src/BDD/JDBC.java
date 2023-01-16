@@ -1,6 +1,5 @@
 package BDD;
 
-
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
@@ -8,6 +7,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 /**
  *
@@ -19,13 +19,19 @@ public class JDBC {
      * Connect to the BDD.db database
      * @return the Connection object
      */
+	private static JDBC app ;
+	
+	public static JDBC getInstance()
+    {
+        if (JDBC.app == null)
+        {
+            JDBC.app = new JDBC();
+        }
+        return JDBC.app;
+    }
+	
     private Connection connect() {
         // SQLite connection string
-    	try {
-			Class.forName("org.sqlite.JDBC");
-		} catch (ClassNotFoundException e1) {
-			e1.printStackTrace();
-		}
         String url = "jdbc:sqlite:data/BDD.db";
         Connection conn = null;
         try {
@@ -104,11 +110,23 @@ public class JDBC {
 	   }
    
    public void updateport(String ip, String port) {
-	      String sql = "UPDATE Annuaire SET port=? where ip=?";
+	      String sql = "UPDATE Annuaire SET port=? WHERE ip=?";
 	      try (Connection conn = this.connect();
 	   		PreparedStatement pstmt = conn.prepareStatement(sql)) {
-	           pstmt.setString(1,ip);
-	           pstmt.setString(2,port);
+	           pstmt.setString(1,port);
+	           pstmt.setString(2,ip);
+	           pstmt.executeUpdate();
+	           } catch (SQLException e) {
+	               System.out.println(e.getMessage());
+	           }
+	   }
+   
+   public void updateLogin(String login, String ip) {
+	      String sql = "UPDATE Annuaire SET login=? WHERE ip=?";
+	      try (Connection conn = this.connect();
+	   		PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	           pstmt.setString(1,login);
+	           pstmt.setString(2,ip);
 	           pstmt.executeUpdate();
 	           } catch (SQLException e) {
 	               System.out.println(e.getMessage());
@@ -154,6 +172,22 @@ public class JDBC {
        }
    }
    
+   public ArrayList<String> selectPseudoA(){
+       String sql = "SELECT login FROM Annuaire";
+       ArrayList<String> TabPseudo = new ArrayList<String>(); 	
+       try {Connection conn = this.connect();
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+           // loop through the result set
+           while (rs.next()) {
+               TabPseudo.add(rs.getString("login"));
+           }
+       } catch (SQLException e) {
+           System.out.println(e.getMessage());
+       }
+	return TabPseudo;
+   }
+   
    public boolean IsLoginUsed(String login){
 	   boolean a = false;
        String sql = "SELECT login FROM Annuaire WHERE login = ? ";
@@ -163,6 +197,7 @@ public class JDBC {
             ResultSet rs    = pstmt.executeQuery();
            // loop through the result set
            while ((rs.next() && (!a))) {
+        	   System.out.println("[JDBC] - IsLoginUsed : Ligne trouvee : " + rs.getString("login"));
         	   if (rs.getString("login").equals(login)) {
         		   a= true;
         	   }
@@ -301,6 +336,21 @@ public class JDBC {
         }
     }
     
+    public int selectCountA() {
+    	String sql ="SELECT COUNT(*) FROM Annuaire";
+    	int res=0;
+    	try {Connection conn = this.connect();
+        Statement stmt  = conn.createStatement();
+        ResultSet rs    = stmt.executeQuery(sql);
+        	// loop through the result set
+        	while (rs.next()) {
+        		res = rs.getInt(1);
+        	}
+    	} catch (SQLException e) {
+    		System.out.println(e.getMessage());
+    	}
+		return res;
+    }
     
     public void updatedate(int id, String date) {
 	      String sql = "UPDATE Messages SET date=? where id=?";
@@ -315,12 +365,14 @@ public class JDBC {
 	   }
     /**
      * @param args the command line arguments
-     */
+     *//*
     public static void main(String[] args) {
-        JDBC app = new JDBC();
+        //JDBC app = new JDBC();
         //app.createNewDatabase("BDD.db");
         //app.createNewTable();
         //app.Alter();
+    	
+        JDBC app = JDBC.getInstance();
         app.insertM(3, "Tu fais quoi en ce moment?", "192.168.10.1","192.168.12.1");
         app.insertM(4, "Je suis tellement débordé avec ce projet de chat.","192.168.12.1","192.168.10.1");
         app.selectAllM();
@@ -332,13 +384,13 @@ public class JDBC {
         app.insertA("192.168.10.1","Herstory","6002");
         app.insertAwithoutP("192.168.12.1","Lemonade");
         app.selectAllA();
-        app.updateport("192.168.12.1", "2003");
+        app.updateport("192.168.12.1", "1425");
         app.selectAllA();
         if (app.IsLoginUsed("Herstory")) {
         	System.out.println("Yes, It's used\n");
         }else System.out.println("No, It's free\n");
-        //app.deleteA("192.168.10.1");
+        app.deleteA("192.168.10.1");
         app.deleteA("192.168.12.1");
-    }
+    }*/
 
 }

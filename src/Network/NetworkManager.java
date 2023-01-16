@@ -6,7 +6,9 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Set;
 
+import BDD.JDBC;
 import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
 import Message.Message;
@@ -47,6 +49,7 @@ public class NetworkManager implements Runnable{
 	private static NetworkManager instance;
 	private static boolean connected;
 	private static boolean running;
+	private JDBC db;
 	
 	public static NetworkManager getInstance() throws IOException
 	{
@@ -73,7 +76,8 @@ public class NetworkManager implements Runnable{
 		Thread t_udpsend = new Thread(this.udp_send_thread);
 		this.udp_receive_thread = UDP_Receiver.getInstance(NetworkManager.UDP_PORT);
 		Thread t_udprcv = new Thread(this.udp_receive_thread);
-
+		
+		this.db = JDBC.getInstance();
 		
 		t_udpsend.start();
 		t_udprcv.start();	
@@ -103,20 +107,18 @@ public class NetworkManager implements Runnable{
 			recu = this.recevoirUDP();
 			if(!recu.isEmpty()) {
 				if (this.isConnectivite(recu)) {
-					String[] coord;
+					String[] coord;	// contiendra IP / PSEUDO / OK ou KO
 					try {
 						coord = this.getCoordonneesFromReponseConnexion(recu);
 						if(coord[2] == "OK")
 						{
 							this.coordonneesUtilisateur.put(coord[0], coord[1]);
-							// à ajouter dans la bdd aussi !
 						}
 						else {
 							System.out.println("Coordonnees recues erronnees");
 							NetworkManager.connected = false;
 						}
 					} catch (InvalidMessageFormatException | InvalidIpException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (MyOwnIpException e) {
 						System.out.println("[NETWORK MANAGER] - connexion : Réception de notre propre paquet ignorée");
@@ -129,8 +131,19 @@ public class NetworkManager implements Runnable{
 		System.out.println("[NETWORK MANAGER] - connexion : Coordonnees recues : \n" + this.coordonneesUtilisateur);
 		
 		if(NetworkManager.connected) {
-			// mise a jour de l'annuaire
 			System.out.println("[NETWORK MANAGER] - connexion : Mise à jour de l'Annuaire...");
+
+			System.out.println("avant modif ...");
+			this.db.selectAllA();
+			// on met à jour l'Annuaire avec les nouveaux IP et Pseudo
+			Set<String> setOfKeys = this.coordonneesUtilisateur.keySet();
+			for (String key : setOfKeys) {
+				String ipTmp = key;
+				String pseudoTmp = this.coordonneesUtilisateur.get(key);
+				this.db.insertAwithoutP(ipTmp, pseudoTmp);
+			}
+			System.out.println("après modif ...");
+			this.db.selectAllA();
 			this.pseudo = pseudo;
 			this.initTCPRcvThread();
 		}
@@ -192,8 +205,7 @@ public class NetworkManager implements Runnable{
 	
 	
 	
-	/** Méthodes privées 
-	 * @throws IOException **/
+	/** Méthodes privées  **/
 	
 	
 	private void initTCPRcvThread() throws IOException {
@@ -242,8 +254,10 @@ public class NetworkManager implements Runnable{
 					
 					// On stocke son IP et son PSEUDO dans l'Annuaire
 					if(coord[2].equals("OK")) {
-						System.out.println("MAJ de la table Annuaire ...");
-						// mettre a jour la bdd (avec port null !)
+						System.out.println("MAJ de la table Annuaire (ajout du pseudo)...");
+						String ipTmp = coord[0];
+						String pseudoTmp = coord[1];
+						this.db.insertAwithoutP(ipTmp, pseudoTmp);
 					}
 				} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
 					e.printStackTrace();
@@ -296,7 +310,9 @@ public class NetworkManager implements Runnable{
 					this.convManager.setPortDistantConversation(this.tcp_ipDistant, this.futurPortTcpDistant);
 					this.tcp_receive_thread.fermerConnexion();
 					this.tcp_send_thread.stop();
-					// ajouter le port dans la BDD
+					
+					// mise à jour du port dans la bdd concernant ce destinataire
+					this.db.updateport(this.tcp_ipDistant.getHostAddress(), String.valueOf(this.futurPortTcpDistant));
 					this.convManager.lancerConversation(this.tcp_ipDistant);
 					System.out.println("[negociationDePorts] : La discussion peut commencer.");
 				} catch (ConversationNotFound e) {
@@ -304,7 +320,6 @@ public class NetworkManager implements Runnable{
 					System.out.println("[negociationDePorts] : Erreur d'ajout de port distant, annulation de la négociation de ports");
 				}
 			}
-			// voir pourquoi recu incorrect
 			else {
 				this.annulationNegociationPorts();
 				System.out.println("[negociationDePorts] : recu incorrect, annulation negociation de ports");
@@ -363,7 +378,6 @@ public class NetworkManager implements Runnable{
 	private String recevoirUDP() {
 		String recu = "";
 		recu = this.udp_receive_thread.getMessageString();
-		//recu = NetworkManager.data(this.udp_receive_thread.getMessage());
 		if(!recu.isEmpty())
 			System.out.println("[NETWORK MANAGER] - recevoirUDP : Message recu : [" + recu + "]");
 		return recu;
@@ -372,7 +386,6 @@ public class NetworkManager implements Runnable{
 	private Message recevoirTCP() {
 		Message recu;
 		recu = this.tcp_receive_thread.getMessage();
-		//recu = NetworkManager.data(this.udp_receive_thread.getMessage());
 		if(recu != null)
 			System.out.println("[NETWORK MANAGER] - recevoirTCP : Message recu : [" + recu + "]");
 		return recu;

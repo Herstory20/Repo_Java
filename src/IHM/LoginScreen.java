@@ -85,7 +85,7 @@ public class LoginScreen implements ActionListener  {
         boolean b = m.find();
         if (b) {
         	label.setForeground(Color.RED);
-        	label.setText("<html>Erreur !! Vous avez un caractère spéciale, \n"
+        	label.setText("<html>Erreur !! Vous avez un caractère spécial, \n"
         			+ "veuillez rentrer un nouveau pseudo.</html>");
         }
         else if ((textField.getText().length()==0)) {
