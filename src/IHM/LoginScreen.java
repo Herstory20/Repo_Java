@@ -99,7 +99,6 @@ public class LoginScreen implements ActionListener  {
 					tryConnexion(userName);
 	        		frame.dispose();
 	                Home Inter = new Home();
-	                Home.createAndShowGUI();
 	                Inter.setVisible(true);
 	        		JOptionPane.showMessageDialog(button, "You have successfully logged ");
 				} catch (InvalidPseudoException e) {
