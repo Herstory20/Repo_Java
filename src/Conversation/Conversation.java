@@ -4,7 +4,10 @@ package Conversation;
 import java.io.IOException;
 import java.net.InetAddress;
 
+import BDD.JDBC;
+import IHM.Home;
 import Message.Message;
+import Network.NetworkManager;
 import Network.TCP.TCP_Receiver;
 import Network.TCP.TCP_Sender;
 
@@ -12,6 +15,7 @@ public class Conversation implements Runnable{
 	private TCP_Sender tcp_send_thread;
 	private TCP_Receiver tcp_receive_thread;
 	private InetAddress ipDistant;
+	private InetAddress ipLocale;
 	private int portLocal;
 	private int portDistant;
 	private boolean isOpen;
@@ -21,6 +25,7 @@ public class Conversation implements Runnable{
 		this.ipDistant = ipDistant;
 		this.portLocal = portLocal;
 		this.isOpen = false;
+		this.ipLocale = NetworkManager.getInstance().getMyIpAddress();
 
 		this.tcp_receive_thread = new TCP_Receiver(this.portLocal);
 		Thread t_tcprcv = new Thread(tcp_receive_thread);
@@ -51,6 +56,9 @@ public class Conversation implements Runnable{
 	
 	public void send(Message message) {
 		this.tcp_send_thread.setMessage(message);
+		//Home.getInstance().addMessageSend(message.getContenu());
+		JDBC.getInstance().insertM(message.getContenu(), this.ipLocale.getHostAddress(), ipDistant.getHostAddress());
+
 	}
 	
 	public boolean isConversationOpen() {
@@ -66,9 +74,11 @@ public class Conversation implements Runnable{
 			
 			recu = this.tcp_receive_thread.getMessage();
 			if(recu != null){
-				// ajouter message à la DB
-				// ajouter message au listener de l'interface
-				System.out.println("[Conversation] : Message reçu de la part de " + ipDistant.getHostName() + " : \n>> " + recu.getContenu());
+				String contenu = recu.getContenu();
+				JDBC.getInstance().insertM(contenu, ipDistant.getHostAddress(), this.ipLocale.getHostAddress());
+				//Home.getInstance().addMessageReceive(contenu);
+				
+				System.out.println("[Conversation] : Message reçu de la part de " + ipDistant.getHostAddress() + " : \n>> " + contenu);
 			}
 			
 			try {

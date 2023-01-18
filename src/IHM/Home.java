@@ -2,9 +2,19 @@ package IHM;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Set;
 
 import BDD.JDBC;
+import Conversation.Conversation;
+import Conversation.ConversationsManager;
+import Conversation.Exceptions.ConversationNotFound;
+import Network.NetworkManager;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.GroupLayout.Alignment;
@@ -12,7 +22,26 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 
 public class Home extends JFrame {
 	
-	public Home() {
+	private ArrayList<String> TabPseudo;
+	private ArrayList<JButton> tabUsers;
+	private String currentInterlocutor;
+	private Conversation currentConversation;
+	private InetAddress currentIpInterlocutor;
+	private static Home instance;
+
+	// j'étais en train d'essayer de mettre auto increment pour les messages 
+	// + faut tester l'envoi messages
+
+	public static Home getInstance() throws IOException
+	{
+		if (Home.instance == null)
+		{
+			Home.instance = new Home();
+		}
+		return Home.instance;
+	}
+	
+	private Home() {
 		//Set the look and feel.
         initLookAndFeel();
         setTitle("Clavardeur");
@@ -44,7 +73,18 @@ public class Home extends JFrame {
 				String tosend = messagetosend.getText();
 				if (!tosend.isEmpty()) {
 					//Creer le thread si conversation existe pas
-					//addMessagesend(tosend);
+					try {
+						NetworkManager.getInstance().newDiscussion(currentIpInterlocutor);
+						ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
+						// ajouter a la bdd un jour aussi
+						// ===> pb : comment on fait quand on reçoit un message ? il faut notify home
+					} catch (IOException | ConversationNotFound e) {
+						e.printStackTrace();
+					}
+					
+					
+					
+					
 					messagetosend.setText("");
 				 }
 				}
@@ -95,22 +135,84 @@ public class Home extends JFrame {
 							.addComponent(btnNewButton)))
 					.addContainerGap())
 		);
-		
+
 		
 		
 		JPanel Users = new JPanel();
 		username.setViewportView(Users);
 		Users.setLayout(new MigLayout("fillx"));
-		
+		tabUsers = new ArrayList<>();
 		JDBC app = JDBC.getInstance();
-		ArrayList<String> TabPseudo = app.selectPseudoA();
-		for (int i=0; i< 20 /*app.selectCountA()*/;i++) {
-			JButton tmp = new JButton("Login" + i /*TabPseudo.get(i)*/);
-			Users.add(tmp, "wrap");
+		TabPseudo = app.selectPseudoA();
+		for (int i=0; i<TabPseudo.size();i++) {
+			JButton tmp = new JButton(TabPseudo.get(i));
+			tmp.setLayout(null); 
+			// marche pas
+			tabUsers.add(tmp);
+			tmp.addActionListener(new ActionListener() {
+				
+				// si on clique sur un user, on charge la conversation
+				public void actionPerformed(ActionEvent e) {
+					for (Iterator<JButton> iterator = tabUsers.iterator(); iterator.hasNext();) {
+						JButton tmpButton = (JButton) iterator.next();
+						if(tmpButton == e.getSource()) {
+							currentInterlocutor = tmpButton.getText();
+							try {
+								currentIpInterlocutor =  InetAddress.getByName(JDBC.getInstance().selectIPfromPseudoA(currentInterlocutor));
+							} catch (UnknownHostException e1) {
+								e1.printStackTrace();
+							}
+							// potentielle erreur si select null !
+							
+							if(ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
+								try {
+									this.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
+								} catch (IOException e2) {
+									e2.printStackTrace();
+								}
+							}
+							// met a jour currentConversation : 
+							//	Si conv existe, la charge dedans et appelle la fonction qui va remplir les messages 
+							//		- récupérer l'IP lié au pseudo depuis la bdd => currentIpInterlocutor
+							//		- envoie ça au conversation manager isConvExist
+							// 		- si oui, alors on get tous les messages de la conversation en question
+							//		Il faut donc :
+							//		- un selectMessageFromConversation dans JDBC
+							//		- un getIpFromPseudo
+							//	Sinon, laisse currentConversation à NULL et la conv sera créée depuis Network manager lors du 1er send
+						}
+						
+					}
+				}
+
+				private void loadChatHistory(Hashtable<String, String> chatHistory) {
+					String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
+
+					Set<String> setOfKeys = chatHistory.keySet();
+					for (String key : setOfKeys) {
+						String ipDestTmp = key;
+						String messageTmp = chatHistory.get(key);
+						
+						if(ipDestTmp.equals(ipInterlocutorStr)) {
+							// cas d'un message envoyé par nous (le dest, c'est lui)
+							
+						}
+						else {
+							// cas d'un message reçu (le dest c'est nous)
+						}
+					}
+				}
+			});
+			Users.add(tmp, "wrap, grow");
+			
 		};
+		if(tabUsers.size()>0) {
+			currentInterlocutor = tabUsers.get(0).getText();
+		}
 		/* A rajouter, l'espace change pseudo dans l'interface + fonction JDBC associé */
 		getContentPane().setLayout(groupLayout);
 	}
+	
 	
 	
 	//Specify the look and feel to use.  Valid values:

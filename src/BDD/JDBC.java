@@ -7,7 +7,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 /**
  *
@@ -285,14 +288,14 @@ public class JDBC {
       * @param ip1
       * @param ip2
       */
-    public void insertM(int id, String message, String ip1, String ip2) {
-       String sql = "INSERT INTO Messages(id,message,ip1,ip2) VALUES(?,?,?,?)";
+    public void insertM(String message, String ip1, String ip2) {
+       String sql = "INSERT INTO Messages(message,ip1,ip2,date) VALUES(?,?,?,?)";
        try (Connection conn = this.connect();
     		PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1,id);
-            pstmt.setString(2, message);
-            pstmt.setString(3, ip1);
-            pstmt.setString(4, ip2);
+            pstmt.setString(1, message);
+            pstmt.setString(2, ip1);
+            pstmt.setString(3, ip2);
+            pstmt.setTimestamp(4,Timestamp.valueOf(LocalDateTime.now()));
             pstmt.executeUpdate();
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -362,7 +365,44 @@ public class JDBC {
 	           } catch (SQLException e) {
 	               System.out.println(e.getMessage());
 	           }
-	   }
+	      }
+    
+    public String selectIPfromPseudoA(String login){
+		String ip=null;
+		String sql = "SELECT ip FROM Annuaire where login=?";
+		try {
+			Connection conn = this.connect();
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, login);
+			ResultSet rs    = pstmt.executeQuery();
+			// loop through the result set
+			while (rs.next()) {
+				ip=rs.getString("ip");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return ip;
+	}
+    
+    public Hashtable < String, String > selectmessagesM(String monIp, String ipdest) {
+        Hashtable < String, String > TableM = new Hashtable < String, String > ();
+        String sql = "SELECT * FROM Messages WHERE ip1=?, ip2=?  ORDER BY id";
+        try {
+            Connection conn = this.connect();
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, monIp);
+            pstmt.setString(2, ipdest);
+            ResultSet rs = pstmt.executeQuery();
+            // loop through the result set
+            while (rs.next()) {
+                TableM.put(rs.getString("ip2"), rs.getString("message"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return TableM;
+    }
     /**
      * @param args the command line arguments
      *//*
@@ -373,8 +413,8 @@ public class JDBC {
         //app.Alter();
     	
         JDBC app = JDBC.getInstance();
-        app.insertM(3, "Tu fais quoi en ce moment?", "192.168.10.1","192.168.12.1");
-        app.insertM(4, "Je suis tellement débordé avec ce projet de chat.","192.168.12.1","192.168.10.1");
+        app.insertM("Tu fais quoi en ce moment?", "192.168.10.1","192.168.12.1");
+        app.insertM("Je suis tellement débordé avec ce projet de chat.","192.168.12.1","192.168.10.1");
         app.selectAllM();
         app.deleteM(3);
         app.updatedate(4, "20/12/2022");

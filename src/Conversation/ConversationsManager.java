@@ -16,7 +16,6 @@ public class ConversationsManager {
 	private static List<Conversation> conversations;
 	
 	private ConversationsManager() {
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>><CREATION CONVERSATION MANAGER");
 		ConversationsManager.conversations = new ArrayList<>();
 	}
 	

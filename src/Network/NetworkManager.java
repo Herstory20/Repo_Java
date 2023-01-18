@@ -503,6 +503,10 @@ public class NetworkManager implements Runnable{
     	}
     }
     
+    public InetAddress getMyIpAddress() {
+    	return this.monIp;
+    }
+    
     private int generateRandomPort() {
         ServerSocket s = null;
         try {

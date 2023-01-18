@@ -98,11 +98,13 @@ public class LoginScreen implements ActionListener  {
         		try {
 					tryConnexion(userName);
 	        		frame.dispose();
-	                Home Inter = new Home();
+	                Home Inter = Home.getInstance();
 	                Inter.setVisible(true);
 	        		JOptionPane.showMessageDialog(button, "You have successfully logged ");
-				} catch (InvalidPseudoException e) {
+				} catch (InvalidPseudoException e1) {
 		        	label.setText("<html>Erreur !! Pseudo invalidé par un autre utilisateur.</html>");
+				} catch(IOException e2) {
+					label.setText("<html>Erreur !! Impossible de créer la page 'Home'.</html>");
 				}
         		
         	}
