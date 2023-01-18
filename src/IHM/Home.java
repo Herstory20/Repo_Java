@@ -72,19 +72,15 @@ public class Home extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				String tosend = messagetosend.getText();
 				if (!tosend.isEmpty()) {
-					//Creer le thread si conversation existe pas
 					try {
-						NetworkManager.getInstance().newDiscussion(currentIpInterlocutor);
+						//Creer le thread si conversation existe pas
+						if(!ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
+							NetworkManager.getInstance().newDiscussion(currentIpInterlocutor);
+						}
 						ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
-						// ajouter a la bdd un jour aussi
-						// ===> pb : comment on fait quand on reçoit un message ? il faut notify home
 					} catch (IOException | ConversationNotFound e) {
 						e.printStackTrace();
 					}
-					
-					
-					
-					
 					messagetosend.setText("");
 				 }
 				}
