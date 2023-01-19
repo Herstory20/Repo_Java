@@ -405,7 +405,7 @@ public class JDBC {
     }
     /**
      * @param args the command line arguments
-     *//*
+     */
     public static void main(String[] args) {
         //JDBC app = new JDBC();
         //app.createNewDatabase("BDD.db");
@@ -422,6 +422,7 @@ public class JDBC {
         app.deleteM(4);
         app.selectAllM();
         app.insertA("192.168.10.1","Herstory","6002");
+
         app.insertAwithoutP("192.168.12.1","Lemonade");
         app.selectAllA();
         app.updateport("192.168.12.1", "1425");
@@ -431,6 +432,6 @@ public class JDBC {
         }else System.out.println("No, It's free\n");
         app.deleteA("192.168.10.1");
         app.deleteA("192.168.12.1");
-    }*/
+    }
 
 }

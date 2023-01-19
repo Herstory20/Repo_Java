@@ -151,9 +151,6 @@ public class NetworkManager implements Runnable{
 			System.out.println("[NETWORK MANAGER] - connexion : Echec de la mise à jour de l'Annuaire, pseudo invalidé par les autres utilisateurs");
 		}
 		
-		
-		udp_send_thread.setBroadcastDisabled();
-		
 		System.out.println("[NETWORK MANAGER] - connexion : Fin connexion");
 		return NetworkManager.connected;
 	}
@@ -202,6 +199,48 @@ public class NetworkManager implements Runnable{
 			
 		}
 	}
+	
+
+	public boolean changePseudo(String pseudo) throws InvalidPseudoException, IOException {
+		boolean nouveauPseudoOK = true;
+		String message = "NouveauPseudo;" + monIp.getHostAddress() + ";" + pseudo;
+		this.udp_send_thread.setBroadcastEnabled();
+		this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
+		
+		// attente des réponses des autres utilisateurs
+		String recu = "";
+		
+		long start = System.currentTimeMillis();
+		long elapsedTime = System.currentTimeMillis() - start;
+		
+		System.out.println("[NETWORK MANAGER] - changePseudo : Attente réponse autres utilisateurs...");
+		while(elapsedTime < NetworkManager.CONNEXION_DELAI_ATTENTE_REPONSE_MS) {
+			recu = this.recevoirUDP();
+			if(!recu.isEmpty()) {
+				if (this.isConnectivite(recu)) {
+					if(recu.contains("KO"))	// pas sur que ça marche, à tester
+					{
+						nouveauPseudoOK = false;
+					}
+				}
+			}
+			elapsedTime = System.currentTimeMillis() - start;
+		}
+				
+		if(nouveauPseudoOK) {
+			System.out.println("[NETWORK MANAGER] - changePseudo : Mise à jour du pseudo...");
+			this.pseudo = pseudo;
+		}
+		else {
+			System.out.println("[NETWORK MANAGER] - changePseudo : Echec de la mise à jour du pseudo, pseudo invalidé par les autres utilisateurs");
+		}
+		
+		System.out.println("[NETWORK MANAGER] - changePseudo : Fin connexion");
+		return nouveauPseudoOK;
+	}
+	
+	
+	
 	
 	
 	

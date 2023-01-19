@@ -78,7 +78,7 @@ public class UDP_Sender implements Runnable{
 		UDP_Sender.broadcastMode = true;
 	}
 
-	public void setBroadcastDisabled()
+	private void setBroadcastDisabled()
 	{
 		UDP_Sender.broadcastMode = false;
 	}
@@ -112,6 +112,7 @@ public class UDP_Sender implements Runnable{
         UDP_Sender.socket.send(DpBroadCastSend);
         socket.setBroadcast(false);
 		UDP_Sender.message = null;
+		this.setBroadcastDisabled();	// on disable automatiquement après chaque broadcast
     }
 	
 	

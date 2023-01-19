@@ -15,13 +15,21 @@ import Conversation.Conversation;
 import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
 import Network.NetworkManager;
+import Network.Exceptions.InvalidPseudoException;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.border.EmptyBorder;
 
 public class Home extends JFrame {
+
 	
+	
+	
+	private JPanel messagebox = new JPanel();
+	private JPanel destinataire = new JPanel();
+	private JPanel expediteur = new JPanel();
 	private ArrayList<String> TabPseudo;
 	private ArrayList<JButton> tabUsers;
 	private String currentInterlocutor;
@@ -42,108 +50,132 @@ public class Home extends JFrame {
 	}
 	
 	private Home() {
-		//Set the look and feel.
+        //Set the look and feel.
         initLookAndFeel();
         setTitle("Clavardeur");
         //Make sure we have nice window decorations.
         setDefaultLookAndFeelDecorated(true);
         //Create and set up the window.
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((int)size.getWidth()/2-1280/2, (int)size.getHeight()/2-720/2, 1280, 720);
-		getContentPane().setBackground(Color.PINK);
-		
-		JScrollPane username = new JScrollPane();
-		username.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		
-		final JTextArea messagebox = new JTextArea();
-		messagebox.setEditable(false);
-		messagebox.setBackground(Color.LIGHT_GRAY);
-		
-		JScrollPane textfield = new JScrollPane();
-		textfield.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-		textfield.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		
-		final JTextArea messagetosend = new JTextArea();
-		textfield.setViewportView(messagetosend);
+        setBounds((int) size.getWidth() / 2 - 1280 / 2, (int) size.getHeight() / 2 - 720 / 2, 1280, 720);
+        getContentPane().setBackground(Color.PINK);
+
+        JScrollPane username = new JScrollPane();
+        username.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        username.getVerticalScrollBar().setUnitIncrement(10);
+
+        JScrollPane textfield = new JScrollPane();
+        textfield.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        textfield.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        final JTextArea messagetosend = new JTextArea();
+        textfield.setViewportView(messagetosend);
 		
 		JButton btnNewButton = new JButton("Send");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String tosend = messagetosend.getText();
 				if (!tosend.isEmpty()) {
-					try {
+					//try {
 						//Creer le thread si conversation existe pas
-						if(!ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
+						/*
+						 * if(!ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
 							NetworkManager.getInstance().newDiscussion(currentIpInterlocutor);
 						}
 						ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
-					} catch (IOException | ConversationNotFound e) {
+						*/
+	                    addMessagesend(tosend);
+	                    addMessagereceive(tosend);
+					/*} catch (IOException | ConversationNotFound e) {
 						e.printStackTrace();
-					}
+					}*/
 					messagetosend.setText("");
 				 }
 				}
 		});
-		
-		btnNewButton.setBackground(UIManager.getColor("CheckBoxMenuItem.acceleratorForeground"));
-		
-		JButton ChangeLogin = new JButton("Change Login");
-		ChangeLogin.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				/**/
-			}
-		});
-		
-		GroupLayout groupLayout = new GroupLayout(getContentPane());
-		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(groupLayout.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-						.addComponent(ChangeLogin, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addComponent(username, GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE))
-					.addGap(18)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addComponent(textfield, GroupLayout.PREFERRED_SIZE, 988, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnNewButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-						.addComponent(messagebox, GroupLayout.PREFERRED_SIZE, 1063, GroupLayout.PREFERRED_SIZE))
-					.addContainerGap())
-		);
-		groupLayout.setVerticalGroup(
-			groupLayout.createParallelGroup(Alignment.TRAILING)
-				.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(username, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
-						.addComponent(messagebox, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE))
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(ChangeLogin, GroupLayout.DEFAULT_SIZE, 33, Short.MAX_VALUE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addPreferredGap(ComponentPlacement.RELATED, 6, Short.MAX_VALUE)
-							.addComponent(textfield, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(btnNewButton)))
-					.addContainerGap())
-		);
 
-		
-		
+        btnNewButton.setBackground(UIManager.getColor("CheckBoxMenuItem.acceleratorForeground"));
+        
+        JButton ChangeLogin = new JButton("Change Login");
+        ChangeLogin.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+                /**/
+            }
+        });
+
+
+        JScrollPane messbox = new JScrollPane();
+        messbox.getVerticalScrollBar().setUnitIncrement(10);
+
+        GroupLayout groupLayout = new GroupLayout(getContentPane());
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(groupLayout.createSequentialGroup()
+                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(username, GroupLayout.PREFERRED_SIZE, 176, GroupLayout.PREFERRED_SIZE))
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addGap(11)
+                        .addComponent(ChangeLogin, GroupLayout.PREFERRED_SIZE, 179, GroupLayout.PREFERRED_SIZE)))
+                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addGap(7)
+                        .addComponent(textfield, GroupLayout.DEFAULT_SIZE, 992, Short.MAX_VALUE)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(btnNewButton)
+                        .addGap(10))
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(messbox, GroupLayout.DEFAULT_SIZE, 1072, Short.MAX_VALUE)
+                        .addGap(12))))
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(groupLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addComponent(messbox, GroupLayout.DEFAULT_SIZE, 611, Short.MAX_VALUE)
+                        .addGap(1))
+                    .addComponent(username, GroupLayout.DEFAULT_SIZE, 613, Short.MAX_VALUE))
+                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addGap(6)
+                        .addComponent(textfield, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE))
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addGap(6)
+                        .addComponent(ChangeLogin, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE))
+                    .addGroup(groupLayout.createSequentialGroup()
+                        .addGap(14)
+                        .addComponent(btnNewButton)))
+                .addContainerGap())
+        );
+
+        messbox.setViewportView(messagebox);
+        messagebox.setLayout(new GridLayout(0, 2, 0, 0));
+
+        destinataire.setBackground(Color.LIGHT_GRAY);
+        messagebox.add(destinataire);
+        destinataire.setLayout(new MigLayout("", "[]", "[]"));
+
+        expediteur.setBackground(Color.LIGHT_GRAY);
+        messagebox.add(expediteur);
+        expediteur.setLayout(new MigLayout("", "[]", "[]"));
+
+
+
 		JPanel Users = new JPanel();
 		username.setViewportView(Users);
 		Users.setLayout(new MigLayout("fillx"));
 		tabUsers = new ArrayList<>();
 		JDBC app = JDBC.getInstance();
 		TabPseudo = app.selectPseudoA();
+		
 		for (int i=0; i<TabPseudo.size();i++) {
 			JButton tmp = new JButton(TabPseudo.get(i));
 			tmp.setLayout(null); 
-			// marche pas
 			tabUsers.add(tmp);
 			tmp.addActionListener(new ActionListener() {
 				
@@ -202,14 +234,80 @@ public class Home extends JFrame {
 			Users.add(tmp, "wrap, grow");
 			
 		};
+
 		if(tabUsers.size()>0) {
 			currentInterlocutor = tabUsers.get(0).getText();
 		}
 		/* A rajouter, l'espace change pseudo dans l'interface + fonction JDBC associé */
 		getContentPane().setLayout(groupLayout);
 	}
-	
-	
+
+    public void addMessagesend(String tosend) {
+        JPanel pmess = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Dimension arcs = new Dimension(15, 15);
+                int width = getWidth();
+                int height = getHeight();
+                Graphics2D graphics = (Graphics2D) g;
+                graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+
+                //Draws the rounded opaque panel with borders.
+                graphics.setColor(Color.green);
+                graphics.fillRoundRect(0, 0, width - 1, height - 1, arcs.width, arcs.height); //paint background
+                graphics.setColor(Color.green);
+                graphics.drawRoundRect(0, 0, width - 1, height - 1, arcs.width, arcs.height); //paint border
+            }
+        };
+        JLabel mess = new JLabel(tosend);
+        pmess.setOpaque(false);
+        pmess.add(mess);
+        JLabel Pseudo = new JLabel("<html> \n date \n </html>");
+        Pseudo.setFont(new Font("New Times Roman", Font.ITALIC, 10));
+        mess.setFont(new Font("New Times Roman", Font.PLAIN, 18));
+        mess.setForeground(Color.black);
+        mess.setBorder(new EmptyBorder(5, 5, 5, 5));
+        this.expediteur.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        this.expediteur.add(pmess, "wrap");
+        this.expediteur.add(Pseudo, "wrap");
+        this.expediteur.revalidate();
+    }
+
+    public void addMessagereceive(String tosend) {
+        JPanel pmess = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Dimension arcs = new Dimension(15, 15);
+                int width = getWidth();
+                int height = getHeight();
+                Graphics2D graphics = (Graphics2D) g;
+                graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+
+                //Draws the rounded opaque panel with borders.
+                graphics.setColor(Color.green);
+                graphics.fillRoundRect(0, 0, width - 1, height - 1, arcs.width, arcs.height); //paint background
+                graphics.setColor(Color.green);
+                graphics.drawRoundRect(0, 0, width - 1, height - 1, arcs.width, arcs.height); //paint border
+            }
+        };
+        JLabel mess = new JLabel(tosend);
+        pmess.setOpaque(false);
+        pmess.add(mess);
+        JPanel videmess = pmess;
+        videmess.setVisible(false);
+        mess.setFont(new Font("New Times Roman", Font.PLAIN, 18));
+        mess.setForeground(Color.black);
+        mess.setBorder(new EmptyBorder(5, 5, 5, 5));
+        this.expediteur.add(videmess, "wrap");
+        this.destinataire.add(pmess, "wrap");
+        this.destinataire.revalidate();
+    }
+
+
 	
 	//Specify the look and feel to use.  Valid values:
     //null (use the default), "Metal", "System", "Motif", "GTK+"
