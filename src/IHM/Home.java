@@ -31,8 +31,6 @@ import javax.swing.border.EmptyBorder;
 public class Home extends JFrame {
 
 
-
-
 	private JPanel messagebox = new JPanel();
 	private JPanel destinataire = new JPanel();
 	private JPanel expediteur = new JPanel();
@@ -43,9 +41,8 @@ public class Home extends JFrame {
 	private InetAddress currentIpInterlocutor;
 	private static Home instance;
 	private JLabel nom = new JLabel();
+	private JDBC app = JDBC.getInstance();
 	
-	
-	JDBC app = JDBC.getInstance();
 	// j'étais en train d'essayer de mettre auto increment pour les messages
 	// + faut tester l'envoi messages
 
@@ -219,7 +216,6 @@ public class Home extends JFrame {
 		username.setViewportView(Users);
 		Users.setLayout(new MigLayout("fillx"));
 		tabUsers = new ArrayList<>();
-		JDBC app = JDBC.getInstance();
 		TabPseudo = app.selectPseudoA();
 
 		for (int i=0; i<TabPseudo.size();i++) {
@@ -272,10 +268,13 @@ public class Home extends JFrame {
 
 						if(ipDestTmp.equals(ipInterlocutorStr)) {
 							// cas d'un message envoyé par nous (le dest, c'est lui)
-
+							addMessagesend(messageTmp,true);
+							addMessagereceive(messageTmp,true);
 						}
 						else {
 							// cas d'un message reçu (le dest c'est nous)
+							addMessagesend(messageTmp,false);
+							addMessagereceive(messageTmp,false);
 						}
 					}
 				}

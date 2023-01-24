@@ -411,7 +411,7 @@ public class JDBC {
         //app.createNewTable();
         //app.Alter();
     	
-        JDBC app = JDBC.getInstance();
+        /*JDBC app = JDBC.getInstance();
         app.insertM("Tu fais quoi en ce moment?", "192.168.10.1","192.168.12.1");
         app.insertM("Je suis tellement débordé avec ce projet de chat.","192.168.12.1","192.168.10.1");
         app.selectAllM();
@@ -430,7 +430,7 @@ public class JDBC {
         	System.out.println("Yes, It's used\n");
         }else System.out.println("No, It's free\n");
         app.deleteA("192.168.10.1");
-        app.deleteA("192.168.12.1");
+        app.deleteA("192.168.12.1");*/
     }
 
 }

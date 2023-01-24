@@ -56,8 +56,15 @@ public class Conversation implements Runnable{
 	
 	public void send(Message message) {
 		this.tcp_send_thread.setMessage(message);
-		//Home.getInstance().addMessageSend(message.getContenu());
+		
 		JDBC.getInstance().insertM(message.getContenu(), this.ipLocale.getHostAddress(), ipDistant.getHostAddress());
+		try {
+			Home.getInstance().addMessagesend(message.getContenu(),true);
+			Home.getInstance().addMessagereceive(message.getContenu(), true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 	
@@ -76,7 +83,13 @@ public class Conversation implements Runnable{
 			if(recu != null){
 				String contenu = recu.getContenu();
 				JDBC.getInstance().insertM(contenu, ipDistant.getHostAddress(), this.ipLocale.getHostAddress());
-				//Home.getInstance().addMessageReceive(contenu);
+				try {
+					Home.getInstance().addMessagereceive(contenu,false);
+					Home.getInstance().addMessagesend(contenu, false);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 				System.out.println("[Conversation] : Message reçu de la part de " + ipDistant.getHostAddress() + " : \n>> " + contenu);
 			}
