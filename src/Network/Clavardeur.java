@@ -26,7 +26,7 @@ public class Clavardeur {
 			
 			boolean connexionOK = false;
 			try {
-				connexionOK = nm.connexion(pseudo);
+				nm.connexion(pseudo);
 			} catch (InvalidPseudoException e) {
 				e.printStackTrace();
 			}
@@ -61,7 +61,7 @@ public class Clavardeur {
 			nm = NetworkManager.getInstance();
 			boolean connexionOK = false;
 			try {
-				connexionOK = nm.connexion(pseudo);
+				nm.connexion(pseudo);
 			} catch (InvalidPseudoException e) {
 				e.printStackTrace();
 			}

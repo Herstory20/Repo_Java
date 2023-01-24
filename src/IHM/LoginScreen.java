@@ -65,15 +65,13 @@ public class LoginScreen implements ActionListener  {
 		}
     }
     
-    private static boolean tryConnexion(String pseudo) throws InvalidPseudoException {
-		boolean connexionOK = false;
+    private static void tryConnexion(String pseudo) throws InvalidPseudoException, IOException {
 		try {
-			connexionOK = nm.connexion(pseudo);
+			nm.connexion(pseudo);
 		} catch (IOException e) {
 			e.printStackTrace();
+			throw e;
 		}
-		
-		return connexionOK;
     }
     
     @Override

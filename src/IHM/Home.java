@@ -68,6 +68,7 @@ public class Home extends JFrame {
         final JTextArea messagetosend = new JTextArea();
         textfield.setViewportView(messagetosend);
 
+        // envoi d'un message
         JButton btnNewButton = new JButton("Send");
         btnNewButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {

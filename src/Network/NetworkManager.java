@@ -49,6 +49,8 @@ public class NetworkManager implements Runnable{
 	private static NetworkManager instance;
 	private static boolean connected;
 	private static boolean running;
+	private static boolean tcpRcvOn;
+	private Thread myThread;
 	private JDBC db;
 	
 	public static NetworkManager getInstance() throws IOException
@@ -64,6 +66,7 @@ public class NetworkManager implements Runnable{
 		this.pseudo = "";
 		NetworkManager.connected = false;
 		NetworkManager.running = true;
+		NetworkManager.tcpRcvOn = false;
 		this.tcp_ipDistant = null;
 		this.futurPortTcpLocal = 0;
 		this.futurPortTcpDistant = 0;
@@ -80,7 +83,10 @@ public class NetworkManager implements Runnable{
 		this.db = JDBC.getInstance();
 		
 		t_udpsend.start();
-		t_udprcv.start();	
+		t_udprcv.start();
+
+		this.myThread = new Thread(this);
+		this.myThread.start();
 	}
 
 	
@@ -89,7 +95,7 @@ public class NetworkManager implements Runnable{
 		NetworkManager.running = false;
 	}
 
-	public boolean connexion(String pseudo) throws InvalidPseudoException, IOException {
+	public void connexion(String pseudo) throws IOException, InvalidPseudoException {
 		NetworkManager.connected = true;
 		// envoi des informations de connexion
 		String message = "Bonjour;" + monIp.getHostAddress() + ";" + pseudo;
@@ -104,6 +110,7 @@ public class NetworkManager implements Runnable{
 		
 		System.out.println("[NETWORK MANAGER] - connexion : Attente réponse autres utilisateurs...");
 		while(elapsedTime < NetworkManager.CONNEXION_DELAI_ATTENTE_REPONSE_MS) {
+
 			recu = this.recevoirUDP();
 			if(!recu.isEmpty()) {
 				if (this.isConnectivite(recu)) {
@@ -149,21 +156,19 @@ public class NetworkManager implements Runnable{
 		}
 		else {
 			System.out.println("[NETWORK MANAGER] - connexion : Echec de la mise à jour de l'Annuaire, pseudo invalidé par les autres utilisateurs");
+			throw new InvalidPseudoException(pseudo);
 		}
 		
 		System.out.println("[NETWORK MANAGER] - connexion : Fin connexion");
-		return NetworkManager.connected;
 	}
 	
 
 	@Override
 	public void run() {
-		System.out.println("[NetworkManager] : running");
+		System.out.println("[NETWORK MANAGER] - RUN : running");
 		while(NetworkManager.running)
 		{
-			if(NetworkManager.connected) {
-				this.update();
-			}
+			this.update();
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException e) {
@@ -174,18 +179,21 @@ public class NetworkManager implements Runnable{
 		
 	
 	public void update() {
-		String recuUdp = this.recevoirUDP();
-		if(!recuUdp.isEmpty()) {
-			System.out.println("[NETWORK MANAGER] - update : MESSAGE UDP " + recuUdp + " RECU ! Réponse en cours...");
-			this.repondreTentativeConnexionUDP(recuUdp);
-		}
+		if(NetworkManager.tcpRcvOn) {
+			String recuUdp = this.recevoirUDP();
+
+			if(!recuUdp.isEmpty()) {
+				System.out.println("[NETWORK MANAGER] - update : MESSAGE UDP " + recuUdp + " RECU ! Réponse en cours...");
+				this.repondreTentativeConnexionUDP(recuUdp);
+			}
 		
-		Message recuTcp = this.recevoirTCP();
-		// /!\ vérifier qu'on reçoive bien un paquet du meme ip pendant une co !
-		// + vérifier que l'ip est dans le dictionnaire ! = sécu
-		if(recuTcp != null) {
-			System.out.println("[NETWORK MANAGER] - update : MESSAGE TCP " + recuTcp + " RECU ! Réponse en cours...");
-			this.negociationDePorts(recuTcp);
+			Message recuTcp = this.recevoirTCP();
+			// /!\ vérifier qu'on reçoive bien un paquet du meme ip pendant une co !
+			// + vérifier que l'ip est dans le dictionnaire ! = sécu
+			if(recuTcp != null) {
+				System.out.println("[NETWORK MANAGER] - update : MESSAGE TCP " + recuTcp + " RECU ! Réponse en cours...");
+				this.negociationDePorts(recuTcp);
+			}
 		}
 	}
 	
@@ -201,7 +209,7 @@ public class NetworkManager implements Runnable{
 	}
 	
 
-	public boolean changePseudo(String pseudo) throws InvalidPseudoException, IOException {
+	public boolean changePseudo(String pseudo) throws IOException {
 		boolean nouveauPseudoOK = true;
 		String message = "NouveauPseudo;" + monIp.getHostAddress() + ";" + pseudo;
 		this.udp_send_thread.setBroadcastEnabled();
@@ -253,6 +261,7 @@ public class NetworkManager implements Runnable{
 			this.tcp_receive_thread = new TCP_Receiver(NetworkManager.TCP_PORT);
 			Thread t_tcprcv = new Thread(tcp_receive_thread);
 			t_tcprcv.start();
+			NetworkManager.tcpRcvOn = true;
 		} catch (IOException e) {
 			System.out.println("Connexion sur le port " + NetworkManager.TCP_PORT + " impossible");
 			throw new IOException();
@@ -445,6 +454,7 @@ public class NetworkManager implements Runnable{
     	 * [1] Pseudo
     	 * [2] OK / KO
     	 * */
+    	System.out.println("[getCoordonneesFromReponseConnexion] - getting coords from " + reponse);
     	coordonnees[2] = "OK";
     	// on ne sélectionne que le message
     	String message = reponse.substring(1);
@@ -474,7 +484,7 @@ public class NetworkManager implements Runnable{
     	
     	coordonnees[0] = messagesSepares[1];	// IP
     	coordonnees[1] = messagesSepares[2];	// Pseudo
-    	
+    	System.out.println("[getCoordonneesFromReponseConnexion] - got " + coordonnees[0] + " ; " + coordonnees[1] + " ; " + coordonnees[2]);
     	return coordonnees;
     }
     
