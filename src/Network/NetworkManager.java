@@ -52,6 +52,7 @@ public class NetworkManager implements Runnable{
 	private static boolean tcpRcvOn;
 	private Thread myThread;
 	private JDBC db;
+	private boolean nouveauPseudoOK;
 	
 	public static NetworkManager getInstance() throws IOException
 	{
@@ -184,7 +185,12 @@ public class NetworkManager implements Runnable{
 
 			if(!recuUdp.isEmpty()) {
 				System.out.println("[NETWORK MANAGER] - update : MESSAGE UDP " + recuUdp + " RECU ! Réponse en cours...");
-				this.repondreTentativeConnexionUDP(recuUdp);
+				if(this.isConnectivite(recuUdp)) {
+					this.repondreTentativeConnexionUDP(recuUdp);
+				}
+				else if (this.isChangementPseudo(recuUdp)) {
+					this.repondreTentativeChangementPseudo(recuUdp);
+				}
 			}
 		
 			Message recuTcp = this.recevoirTCP();
@@ -209,42 +215,34 @@ public class NetworkManager implements Runnable{
 	}
 	
 
-	public boolean changePseudo(String pseudo) throws IOException {
-		boolean nouveauPseudoOK = true;
-		String message = "NouveauPseudo;" + monIp.getHostAddress() + ";" + pseudo;
+	public boolean changePseudo(String nouveauPseudo) throws IOException {
+		this.nouveauPseudoOK = true;
+		String message = "Demande" + ";" + monIp.getHostAddress() + ";" + nouveauPseudo;
+		//String message = "2;" + monIp.getHostAddress() + ";" + nouveauPseudo;
 		this.udp_send_thread.setBroadcastEnabled();
-		this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
+		this.udp_send_thread.setMessage(new Message(message, MessageType.CHANGEMENT_PSEUDO));
 		
 		// attente des réponses des autres utilisateurs
-		String recu = "";
 		
 		long start = System.currentTimeMillis();
 		long elapsedTime = System.currentTimeMillis() - start;
 		
 		System.out.println("[NETWORK MANAGER] - changePseudo : Attente réponse autres utilisateurs...");
 		while(elapsedTime < NetworkManager.CONNEXION_DELAI_ATTENTE_REPONSE_MS) {
-			recu = this.recevoirUDP();
-			if(!recu.isEmpty()) {
-				if (this.isConnectivite(recu)) {
-					if(recu.contains("KO"))	// pas sur que ça marche, à tester
-					{
-						nouveauPseudoOK = false;
-					}
-				}
-			}
+			
 			elapsedTime = System.currentTimeMillis() - start;
 		}
 				
-		if(nouveauPseudoOK) {
+		if(this.nouveauPseudoOK) {
 			System.out.println("[NETWORK MANAGER] - changePseudo : Mise à jour du pseudo...");
-			this.pseudo = pseudo;
+			this.pseudo = nouveauPseudo;
 		}
 		else {
 			System.out.println("[NETWORK MANAGER] - changePseudo : Echec de la mise à jour du pseudo, pseudo invalidé par les autres utilisateurs");
 		}
 		
-		System.out.println("[NETWORK MANAGER] - changePseudo : Fin connexion");
-		return nouveauPseudoOK;
+		System.out.println("[NETWORK MANAGER] - changePseudo : Fin");
+		return this.nouveauPseudoOK;
 	}
 	
 	
@@ -308,6 +306,57 @@ public class NetworkManager implements Runnable{
 						this.db.insertAwithoutP(ipTmp, pseudoTmp);
 					}
 				} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
+					e.printStackTrace();
+				} catch (MyOwnIpException e) {
+					// si c'est notre IP, on ignore le paquet
+					System.out.println("[repondreTentativeConnexionUDP] : Propre paquet reçu");
+				}
+		}
+	}
+
+	private void repondreTentativeChangementPseudo(String recu) {
+		System.out.println("[repondreTentativeChangementPseudo] : Réponse en cours à [ " + recu + " ]");
+		if (this.isChangementPseudo(recu)) {
+			String[] coord = null ;
+				try {
+					coord = getInfosFromDemandeChangementPseudo(recu);
+					String typeMessage = coord[0];
+					String ipSender = coord[1];
+					
+					if(typeMessage.equals("Demande")) {
+						String nouveauPseudo = coord[2];
+						
+						// on envoit OK si tout est bon avec notre pseudo / KO sinon
+						String reponse;
+						if(!nouveauPseudo.equals(this.pseudo)) {
+							reponse = "OK";
+							JDBC.getInstance().updateLogin(nouveauPseudo, ipSender);
+						}
+						else {
+							reponse = "KO";
+						}
+						String message = "Reponse" + ";" + nouveauPseudo + ";" + reponse;
+
+						try {
+							this.udp_send_thread.setIp(InetAddress.getByName(ipSender));
+							this.udp_send_thread.setMessage(new Message(message, MessageType.CHANGEMENT_PSEUDO));
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						}
+						
+					}
+					else if (typeMessage.equals("Reponse")) {
+						String reponse = coord[2];
+						if(reponse.equals("OK")) {
+							System.out.println("[repondreTentativeConnexionUDP] : Pseudo Validé");
+						}
+						else {
+							this.nouveauPseudoOK = false;
+							System.out.println("[repondreTentativeConnexionUDP] : Pseudo invalidé !");
+						}
+					}
+				
+				} catch (InvalidMessageFormatException | InvalidIpException | InvalidPseudoException e) {
 					e.printStackTrace();
 				} catch (MyOwnIpException e) {
 					// si c'est notre IP, on ignore le paquet
@@ -446,6 +495,13 @@ public class NetworkManager implements Runnable{
 		return (ordinalReponse == MessageType.CONNECTIVITE.ordinal());
 	}
 
+	private boolean isChangementPseudo(String reponse) {
+		// on ne sélectionne que le type
+		int ordinalReponse = Integer.parseInt(reponse.substring(0, 1));
+		
+		return (ordinalReponse == MessageType.CHANGEMENT_PSEUDO.ordinal());
+	}
+
 	
     private String[] getCoordonneesFromReponseConnexion(String reponse) throws InvalidMessageFormatException, InvalidIpException, MyOwnIpException {
     	String[] coordonnees = new String[3];
@@ -533,6 +589,64 @@ public class NetworkManager implements Runnable{
     	coordonnees[0] = messagesSepares[1];	// IP
     	coordonnees[1] = messagesSepares[2];	// Pseudo
     	
+    	return coordonnees;
+    }
+    
+
+    private String[] getInfosFromDemandeChangementPseudo(String reponse) throws InvalidMessageFormatException, InvalidIpException, MyOwnIpException, InvalidPseudoException {
+    	String[] coordonnees = new String[3];
+    	/* Contient :
+    	 * 	[0] Demande/Reponse
+    	 * >>> DEMANDE :
+    	 * 		[1] IP
+    	 * 		[2] Nouveau Pseudo
+    	 * >>> REPONSE
+    	 * 		[1] Pseudo
+    	 * 		[2] reponse
+    	 * */
+    	
+    	// on ne sélectionne que le message
+    	String message = reponse.substring(1);
+    	
+    	// Format
+		//String message = "2;" + monIp.getHostAddress() + ";" + nouveauPseudo;
+    	String messagesSepares[] = message.split(";");
+    	if(messagesSepares.length != 3) {
+    		throw new InvalidMessageFormatException();
+    	}
+    	
+    	// le type du message est valide 
+    	if(!(	messagesSepares[0].equals("Demande") || 
+    			messagesSepares[0].equals("Reponse"))) {
+    		throw new InvalidMessageFormatException();
+    	}
+    	if(messagesSepares[0].equals("Demande")) {
+        	// l'IP reçue est la notre (ex reception de notre propre broadcast)
+        	if(messagesSepares[1].equals(this.monIp.getHostAddress())) {
+        		throw new MyOwnIpException();
+        	}
+        	// l'IP reçue est erronée
+        	if(messagesSepares[1].isEmpty()) {
+        		throw new InvalidIpException();
+        	}
+        	// le pseudo reçu est erroné
+        	if(messagesSepares[2].isEmpty()) {
+        		throw new InvalidPseudoException("Empty pseudo received");
+        	}
+    	}
+    	else if (messagesSepares[0].equals("Reponse")) {
+        	// le pseudo reçu est erroné
+        	if(messagesSepares[1].isEmpty()) {
+        		throw new InvalidPseudoException("Empty pseudo received");
+        	}
+        	// la reponse reçue est erronée
+        	if(!(messagesSepares[2].equals("OK") || messagesSepares[2].equals("KO"))) {
+        		throw new InvalidMessageFormatException();
+        	}
+    	}
+    	coordonnees[0] = messagesSepares[0];
+    	coordonnees[1] = messagesSepares[1];
+    	coordonnees[2] = messagesSepares[2];
     	return coordonnees;
     }
     

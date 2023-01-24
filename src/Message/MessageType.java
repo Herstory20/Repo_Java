@@ -4,5 +4,6 @@ package Message;
 public enum MessageType {
 	UNKNOWN,
 	CONNECTIVITE,
-	COMMUNICATION
+	COMMUNICATION,
+	CHANGEMENT_PSEUDO
 };
