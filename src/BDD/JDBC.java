@@ -33,8 +33,7 @@ public class JDBC {
         return JDBC.app;
     }
 	
-    private Connection connect() {
-        // SQLite connection string
+    private Connection connect() {   
         String url = "jdbc:sqlite:data/BDD.db";
         Connection conn = null;
         try {
