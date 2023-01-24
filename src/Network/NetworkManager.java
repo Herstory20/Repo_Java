@@ -556,6 +556,10 @@ public class NetworkManager implements Runnable{
     	return this.monIp;
     }
     
+    public String getPseudo() {
+		return pseudo;
+	}
+    
     private int generateRandomPort() {
         ServerSocket s = null;
         try {
