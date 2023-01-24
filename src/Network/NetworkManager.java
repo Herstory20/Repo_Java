@@ -11,6 +11,7 @@ import java.util.Set;
 import BDD.JDBC;
 import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
+import IHM.Home;
 import Message.Message;
 import Message.MessageType;
 import Network.Exceptions.InvalidConnexionMessageException;
@@ -304,6 +305,7 @@ public class NetworkManager implements Runnable{
 						String ipTmp = coord[0];
 						String pseudoTmp = coord[1];
 						this.db.insertAwithoutP(ipTmp, pseudoTmp);
+						Home.updateUsersList();// faire un getinstance !! no need for static
 					}
 				} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
 					e.printStackTrace();

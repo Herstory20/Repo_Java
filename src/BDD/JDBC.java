@@ -187,6 +187,7 @@ public class JDBC {
        } catch (SQLException e) {
            System.out.println(e.getMessage());
        }
+       System.out.println(TabPseudo);
 	return TabPseudo;
    }
    

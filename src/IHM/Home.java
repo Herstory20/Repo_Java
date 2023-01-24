@@ -32,16 +32,17 @@ public class Home extends JFrame {
 
 
 	private JPanel messagebox = new JPanel();
-	private JPanel destinataire = new JPanel();
-	private JPanel expediteur = new JPanel();
-	private ArrayList<String> TabPseudo;
-	private ArrayList<JButton> tabUsers;
-	private String currentInterlocutor;
+	private static JPanel destinataire = new JPanel();
+	private static JPanel expediteur = new JPanel();
+	private static ArrayList<String> TabPseudo;
+	private static ArrayList<JButton> tabUsers;
+	private static String currentInterlocutor;
 	private Conversation currentConversation;
-	private InetAddress currentIpInterlocutor;
+	private static InetAddress currentIpInterlocutor;
 	private static Home instance;
 	private JLabel nom = new JLabel();
-	private JDBC app = JDBC.getInstance();
+	private static JDBC app = JDBC.getInstance();
+	private static JPanel Users = new JPanel();
 	
 	// j'étais en train d'essayer de mettre auto increment pour les messages
 	// + faut tester l'envoi messages
@@ -212,16 +213,28 @@ public class Home extends JFrame {
 
 
 
-		JPanel Users = new JPanel();
 		username.setViewportView(Users);
 		Users.setLayout(new MigLayout("fillx"));
-		tabUsers = new ArrayList<>();
-		TabPseudo = app.selectPseudoA();
+		this.tabUsers = new ArrayList<>();
 
+		Home.updateUsersList();
+
+		if(tabUsers.size()>0) {
+			currentInterlocutor = tabUsers.get(0).getText();
+		}
+		/* A rajouter, l'espace change pseudo dans l'interface + fonction JDBC associé */
+		getContentPane().setLayout(groupLayout);
+	}
+	
+	public static void updateUsersList() {
+		
+		Home.tabUsers.clear();
+		Home.Users.removeAll();
+		TabPseudo = app.selectPseudoA();
 		for (int i=0; i<TabPseudo.size();i++) {
 			JButton tmp = new JButton(TabPseudo.get(i));
 			tmp.setLayout(null);
-			tabUsers.add(tmp);
+			Home.tabUsers.add(tmp);
 			tmp.addActionListener(new ActionListener() {
 
 				// si on clique sur un user, on charge la conversation
@@ -268,29 +281,23 @@ public class Home extends JFrame {
 
 						if(ipDestTmp.equals(ipInterlocutorStr)) {
 							// cas d'un message envoyé par nous (le dest, c'est lui)
-							addMessagesend(messageTmp,true);
-							addMessagereceive(messageTmp,true);
+							Home.addMessagesend(messageTmp,true);
+							Home.addMessagereceive(messageTmp,true);
 						}
 						else {
 							// cas d'un message reçu (le dest c'est nous)
-							addMessagesend(messageTmp,false);
-							addMessagereceive(messageTmp,false);
+							Home.addMessagesend(messageTmp,false);
+							Home.addMessagereceive(messageTmp,false);
 						}
 					}
 				}
 			});
-			Users.add(tmp, "wrap, grow");
-
-		};
-
-		if(tabUsers.size()>0) {
-			currentInterlocutor = tabUsers.get(0).getText();
+			Home.Users.add(tmp, "wrap, grow");
+			Home.Users.revalidate();
 		}
-		/* A rajouter, l'espace change pseudo dans l'interface + fonction JDBC associé */
-		getContentPane().setLayout(groupLayout);
 	}
 
-	public void addMessagesend(String tosend , boolean sender) {
+	public static void addMessagesend(String tosend , boolean sender) {
 		final Color col;
 		if (sender) {
 			col = Color.green;
@@ -336,13 +343,13 @@ public class Home extends JFrame {
 			pmess.setVisible(false);
 			Pseudo.setVisible(false);
 		}
-		this.expediteur.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-		this.expediteur.add(pmess, "wrap, w 90%");
-		this.expediteur.add(Pseudo, "wrap");
-		this.expediteur.revalidate();
+		Home.expediteur.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+		Home.expediteur.add(pmess, "wrap, w 90%");
+		Home.expediteur.add(Pseudo, "wrap");
+		Home.expediteur.revalidate();
 	}
 
-	public void addMessagereceive(String tosend, boolean sender) {
+	public static void addMessagereceive(String tosend, boolean sender) {
 		final Color col;
 		if (sender) {
 			col = Color.green;
@@ -390,9 +397,9 @@ public class Home extends JFrame {
 			pmess.setVisible(true);
 			Pseudo.setVisible(true);
 		}
-		this.destinataire.add(pmess, "wrap, w 90%");
-		this.destinataire.add(Pseudo,"wrap");
-		this.destinataire.revalidate();
+		Home.destinataire.add(pmess, "wrap, w 90%");
+		Home.destinataire.add(Pseudo,"wrap");
+		Home.destinataire.revalidate();
 	}
 
 
