@@ -34,6 +34,7 @@ public class Home extends JFrame {
 	private JPanel messagebox = new JPanel();
 	private static JPanel destinataire = new JPanel();
 	private static JPanel expediteur = new JPanel();
+	private JScrollPane messbox = new JScrollPane();
 	private static ArrayList<String> TabPseudo;
 	private static ArrayList<JButton> tabUsers;
 	private static String currentInterlocutor;
@@ -43,7 +44,7 @@ public class Home extends JFrame {
 	private JLabel nom = new JLabel();
 	private static JDBC app = JDBC.getInstance();
 	private static JPanel Users = new JPanel();
-	
+
 	// j'étais en train d'essayer de mettre auto increment pour les messages
 	// + faut tester l'envoi messages
 
@@ -85,18 +86,22 @@ public class Home extends JFrame {
 		{
 			public void actionPerformed(ActionEvent arg0) {
 				String tosend = messagetosend.getText();
-				if (!tosend.isEmpty()) {
+				if (!tosend.isEmpty() && tosend.length()<15) {
 					/*try {
 					//Creer le thread si conversation existe pas
 						if(!ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
 							NetworkManager.getInstance().newDiscussion(currentIpInterlocutor);
 						}*/
-						//ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
-						addMessagesend(tosend, true);
-						addMessagereceive(tosend,true);
+					//ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
+					addMessagesend(tosend, true);
+					addMessagereceive(tosend,true);
 					/*} catch (IOException | ConversationNotFound e) {
 						e.printStackTrace();
 					}*/
+					messagetosend.setText("");
+				} else if (tosend.length()>15) {
+					addMessagesend(tosend, false);
+					addMessagereceive(tosend,false);
 					messagetosend.setText("");
 				}
 			}
@@ -123,73 +128,74 @@ public class Home extends JFrame {
 					e.printStackTrace();
 				}
 				nom.setText(Login);
-				
-				
+
+
 			}
 		});
 
 
-		JScrollPane messbox = new JScrollPane();
+
 		messbox.getVerticalScrollBar().setUnitIncrement(10);
-		
+
 		JPanel Status = new JPanel();
 
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
+				groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(13)
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-								.addComponent(ChangeLogin, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 179, GroupLayout.PREFERRED_SIZE)
-								.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-									.addComponent(Status, GroupLayout.PREFERRED_SIZE, 175, GroupLayout.PREFERRED_SIZE)
-									.addGap(6))))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(username, GroupLayout.PREFERRED_SIZE, 176, GroupLayout.PREFERRED_SIZE)))
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(7)
-							.addComponent(textfield, GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnNewButton)
-							.addGap(10))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(messbox, GroupLayout.DEFAULT_SIZE, 1064, Short.MAX_VALUE)
-							.addGap(12))))
-		);
+						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addGroup(groupLayout.createSequentialGroup()
+										.addGap(13)
+										.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+												.addComponent(ChangeLogin, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 179, GroupLayout.PREFERRED_SIZE)
+												.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+														.addComponent(Status, GroupLayout.PREFERRED_SIZE, 175, GroupLayout.PREFERRED_SIZE)
+														.addGap(6))))
+								.addGroup(groupLayout.createSequentialGroup()
+										.addContainerGap()
+										.addComponent(username, GroupLayout.PREFERRED_SIZE, 176, GroupLayout.PREFERRED_SIZE)))
+						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addGroup(groupLayout.createSequentialGroup()
+										.addGap(7)
+										.addComponent(textfield, GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(btnNewButton)
+										.addGap(10))
+								.addGroup(groupLayout.createSequentialGroup()
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(messbox, GroupLayout.DEFAULT_SIZE, 1064, Short.MAX_VALUE)
+										.addGap(12))))
+				);
 		groupLayout.setVerticalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
+				groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(messbox, GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
-						.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-							.addComponent(Status, GroupLayout.PREFERRED_SIZE, 68, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(username, GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)))
-					.addGap(1)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(6)
-							.addComponent(textfield, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(6)
-							.addComponent(ChangeLogin, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(14)
-							.addComponent(btnNewButton)))
-					.addGap(11))
-		);
-		
+						.addContainerGap()
+						.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+								.addComponent(messbox, GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
+								.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
+										.addComponent(Status, GroupLayout.PREFERRED_SIZE, 68, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(username, GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)))
+						.addGap(1)
+						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addGroup(groupLayout.createSequentialGroup()
+										.addGap(6)
+										.addComponent(textfield, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE))
+								.addGroup(groupLayout.createSequentialGroup()
+										.addGap(6)
+										.addComponent(ChangeLogin, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE))
+								.addGroup(groupLayout.createSequentialGroup()
+										.addGap(14)
+										.addComponent(btnNewButton)))
+						.addGap(11))
+				);
+		Status.setLayout(new MigLayout("", "[150.00px]", "[23.00px][21px]"));
+
 		JLabel status1 = new JLabel("Connecté en tant que ");
-		Status.add(status1);
-		
-		
-		
+		Status.add(status1, "cell 0 0,alignx center,aligny center");
+
+
+
 		try {
 			nom.setText(NetworkManager.getInstance().getPseudo());
 		} catch (IOException e3) {
@@ -198,7 +204,7 @@ public class Home extends JFrame {
 		}
 		nom.setForeground(Color.ORANGE);
 		nom.setFont(new Font("New Times Roman", Font.PLAIN, 16));;
-		Status.add(nom);
+		Status.add(nom, "cell 0 1,alignx center,aligny top");
 
 		messbox.setViewportView(messagebox);
 		messagebox.setLayout(new GridLayout(0, 2, 0, 0));
@@ -225,78 +231,97 @@ public class Home extends JFrame {
 		/* A rajouter, l'espace change pseudo dans l'interface + fonction JDBC associé */
 		getContentPane().setLayout(groupLayout);
 	}
-	
+
 	public static void updateUsersList() {
-		
+
 		Home.tabUsers.clear();
 		Home.Users.removeAll();
 		TabPseudo = app.selectPseudoA();
 		for (int i=0; i<TabPseudo.size();i++) {
-			JButton tmp = new JButton(TabPseudo.get(i));
-			tmp.setLayout(null);
-			Home.tabUsers.add(tmp);
-			tmp.addActionListener(new ActionListener() {
+			String pstmp = TabPseudo.get(i);
+			try {
+				if (pstmp != NetworkManager.getInstance().getPseudo()) 
+				{
+					JButton tmp = new JButton(pstmp);
+					tmp.setLayout(null);
+					Home.tabUsers.add(tmp);
+					tmp.addActionListener(new ActionListener() {
 
-				// si on clique sur un user, on charge la conversation
-				public void actionPerformed(ActionEvent e) {
-					for (Iterator<JButton> iterator = tabUsers.iterator(); iterator.hasNext();) {
-						JButton tmpButton = (JButton) iterator.next();
-						if(tmpButton == e.getSource()) {
-							currentInterlocutor = tmpButton.getText();
-							try {
-								currentIpInterlocutor =  InetAddress.getByName(JDBC.getInstance().selectIPfromPseudoA(currentInterlocutor));
-							} catch (UnknownHostException e1) {
-								e1.printStackTrace();
+						// si on clique sur un user, on charge la conversation
+						public void actionPerformed(ActionEvent e) {
+							for (Iterator<JButton> iterator = tabUsers.iterator(); iterator.hasNext();) {
+								JButton tmpButton = (JButton) iterator.next();
+								if(tmpButton == e.getSource()) {
+									currentInterlocutor = tmpButton.getText();
+									try {
+										currentIpInterlocutor =  InetAddress.getByName(JDBC.getInstance().selectIPfromPseudoA(currentInterlocutor));
+									} catch (UnknownHostException e1) {
+										e1.printStackTrace();
+									}
+									// potentielle erreur si select null !
+									Home.refresh();
+									if(ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
+										try {
+											this.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
+										} catch (IOException e2) {
+											e2.printStackTrace();
+										}
+									}
+									// met a jour currentConversation :
+									// Si conv existe, la charge dedans et appelle la fonction qui va remplir les messages
+									// - récupérer l'IP lié au pseudo depuis la bdd => currentIpInterlocutor
+									// - envoie ça au conversation manager isConvExist
+									// - si oui, alors on get tous les messages de la conversation en question
+									// Il faut donc :
+									// - un selectMessageFromConversation dans JDBC
+									// - un getIpFromPseudo
+									// Sinon, laisse currentConversation à NULL et la conv sera créée depuis Network manager lors du 1er send
+								}
+
 							}
-							// potentielle erreur si select null !
+						}
 
-							if(ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
-								try {
-									this.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
-								} catch (IOException e2) {
-									e2.printStackTrace();
+						private void loadChatHistory(Hashtable<String, String> chatHistory) {
+							String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
+
+							Set<String> setOfKeys = chatHistory.keySet();
+							for (String key : setOfKeys) {
+								String ipDestTmp = key;
+								String messageTmp = chatHistory.get(key);
+
+								if(ipDestTmp.equals(ipInterlocutorStr)) {
+									// cas d'un message envoyé par nous (le dest, c'est lui)
+									Home.addMessagesend(messageTmp,true);
+									Home.addMessagereceive(messageTmp,true);
+								}
+								else {
+									// cas d'un message reçu (le dest c'est nous)
+									Home.addMessagesend(messageTmp,false);
+									Home.addMessagereceive(messageTmp,false);
 								}
 							}
-							// met a jour currentConversation :
-							// Si conv existe, la charge dedans et appelle la fonction qui va remplir les messages
-							// - récupérer l'IP lié au pseudo depuis la bdd => currentIpInterlocutor
-							// - envoie ça au conversation manager isConvExist
-							// - si oui, alors on get tous les messages de la conversation en question
-							// Il faut donc :
-							// - un selectMessageFromConversation dans JDBC
-							// - un getIpFromPseudo
-							// Sinon, laisse currentConversation à NULL et la conv sera créée depuis Network manager lors du 1er send
 						}
-
-					}
+					});
+				Home.Users.add(tmp, "wrap, grow");
+				Home.Users.revalidate();
 				}
-
-				private void loadChatHistory(Hashtable<String, String> chatHistory) {
-					String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
-
-					Set<String> setOfKeys = chatHistory.keySet();
-					for (String key : setOfKeys) {
-						String ipDestTmp = key;
-						String messageTmp = chatHistory.get(key);
-
-						if(ipDestTmp.equals(ipInterlocutorStr)) {
-							// cas d'un message envoyé par nous (le dest, c'est lui)
-							Home.addMessagesend(messageTmp,true);
-							Home.addMessagereceive(messageTmp,true);
-						}
-						else {
-							// cas d'un message reçu (le dest c'est nous)
-							Home.addMessagesend(messageTmp,false);
-							Home.addMessagereceive(messageTmp,false);
-						}
-					}
-				}
-			});
-			Home.Users.add(tmp, "wrap, grow");
-			Home.Users.revalidate();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
+	protected static void refresh() {
+		expediteur.removeAll();
+		destinataire.removeAll();
+		expediteur.revalidate();
+		destinataire.revalidate();
+		expediteur.repaint();
+		destinataire.repaint();
+	}
+
+	/* boolean to seperate if we add the message as the sender or receiver */
 	public static void addMessagesend(String tosend , boolean sender) {
 		final Color col;
 		if (sender) {
@@ -324,7 +349,6 @@ public class Home extends JFrame {
 			}
 		};
 		JTextArea mess = new JTextArea(tosend);
-		mess.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 		mess.setEditable(false);
 		mess.setBackground(col);
 		mess.setLineWrap(true);
@@ -333,7 +357,7 @@ public class Home extends JFrame {
 		pmess.setLayout(new MigLayout());
 		pmess.add(mess,"wrap, w 100%");
 		Date date = Calendar.getInstance().getTime();  
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
 		JLabel Pseudo = new JLabel(dateFormat.format(date));
 		Pseudo.setFont(new Font("New Times Roman", Font.ITALIC, 10));
 		mess.setFont(new Font("New Times Roman", Font.PLAIN, 18));
@@ -386,7 +410,7 @@ public class Home extends JFrame {
 		pmess.setLayout(new MigLayout());
 		pmess.add(mess,"wrap, w 100%");
 		Date date = Calendar.getInstance().getTime();  
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
 		JLabel Pseudo = new JLabel(dateFormat.format(date));
 		Pseudo.setFont(new Font("New Times Roman", Font.ITALIC, 10));
 		Pseudo.setVisible(false);
