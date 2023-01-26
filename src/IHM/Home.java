@@ -86,22 +86,23 @@ public class Home extends JFrame {
 		{
 			public void actionPerformed(ActionEvent arg0) {
 				String tosend = messagetosend.getText();
-				if (!tosend.isEmpty() && tosend.length()<15) {
-					/*try {
-					//Creer le thread si conversation existe pas
+				if (!tosend.isEmpty()) {
+					try {
+						//Creer le thread si conversation existe pas
 						if(!ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
+							System.out.println("[HOME] - SEND_BUTTONActionPerformed : Creation du thread car inexistant");
 							NetworkManager.getInstance().newDiscussion(currentIpInterlocutor);
-						}*/
-					//ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
-					addMessagesend(tosend, true);
-					addMessagereceive(tosend,true);
-					/*} catch (IOException | ConversationNotFound e) {
+						}
+						else {
+							System.out.println("[HOME] - SEND_BUTTONActionPerformed : Thread déjà existant.");
+						}
+						
+						System.out.println("[HOME] - SEND_BUTTONActionPerformed : Envoi du message...");
+						ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
+						
+					} catch (IOException | ConversationNotFound e) {
 						e.printStackTrace();
-					}*/
-					messagetosend.setText("");
-				} else if (tosend.length()>15) {
-					addMessagesend(tosend, false);
-					addMessagereceive(tosend,false);
+					}
 					messagetosend.setText("");
 				}
 			}

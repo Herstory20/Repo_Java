@@ -10,6 +10,7 @@ import java.util.List;
 import Conversation.Exceptions.ConversationNotFound;
 import Message.Message;
 import Message.MessageType;
+import Network.NetworkManager;
 
 public class ConversationsManager {
 	private static ConversationsManager instance;
@@ -30,7 +31,7 @@ public class ConversationsManager {
 	}
 	
 	
-	public boolean creerConversation(InetAddress ipDistant, int portLocal) {
+	public synchronized boolean creerConversation(InetAddress ipDistant, int portLocal) {
 		Conversation tmpConv;
 		System.out.println("[ CONVERSATION_MANAGER ] - CREATION CONVERSATION");
 		boolean succes = true;
@@ -46,7 +47,7 @@ public class ConversationsManager {
 		return succes;
 	}
 	
-	public void setPortDistantConversation(InetAddress ipDistant, int portDistant) throws ConversationNotFound {
+	public synchronized void setPortDistantConversation(InetAddress ipDistant, int portDistant) throws ConversationNotFound {
 		boolean trouve = false;
 		System.out.println("[ CONVERSATION_MANAGER ] - list : " + ConversationsManager.conversations);
 		for (Iterator<Conversation> iterator = ConversationsManager.conversations.iterator(); iterator.hasNext();) {
@@ -64,7 +65,7 @@ public class ConversationsManager {
 		}
 	}
 	
-	public void lancerConversation(InetAddress ipDistant) throws ConversationNotFound {
+	public synchronized void lancerConversation(InetAddress ipDistant) throws ConversationNotFound {
 		boolean trouve = false;
 		for (Iterator<Conversation> iterator = ConversationsManager.conversations.iterator(); iterator.hasNext();) {
 			Conversation conversation = (Conversation) iterator.next();
@@ -73,6 +74,7 @@ public class ConversationsManager {
 				Thread threadConv = new Thread(conversation);
 				threadConv.start();
 				trouve = true;
+				System.out.println("[ConversationsManager] - lancerConversation : conversation lancee avec " + ipDistant.getHostName());
 				break;
 			}
 			
@@ -117,18 +119,40 @@ public class ConversationsManager {
 
 	
 	public void send(InetAddress ipDistant, String message) throws ConversationNotFound {
+		System.out.println("[ConversationsManager] - send : SENDING...");
 		boolean trouve = false;
-		for (Iterator<Conversation> iterator = ConversationsManager.conversations.iterator(); iterator.hasNext();) {
-			Conversation conversation = (Conversation) iterator.next();
-			
-			if(conversation.getIpDistant().equals(ipDistant)) {
-				conversation.send(new Message(message,MessageType.COMMUNICATION));
-				trouve = true;
-				break;
+		int timeout_ms = 5000;
+		long start = System.currentTimeMillis();
+		long elapsedTime = System.currentTimeMillis() - start;
+		while(!trouve && elapsedTime < timeout_ms) {
+			for (Iterator<Conversation> iterator = ConversationsManager.conversations.iterator(); iterator.hasNext();) {
+				Conversation conversation = (Conversation) iterator.next();
+				
+				if(conversation.getIpDistant().equals(ipDistant)) {
+					if(conversation.isConversationOpen()) {
+						conversation.send(new Message(message,MessageType.COMMUNICATION));
+						trouve = true;
+						System.out.println("[ConversationsManager] - send : conv trouvee : " + ipDistant.getHostAddress() + " et " + conversation.getIpDistant());
+						break;
+					}
+				}
+				else {
+					System.out.println("[ConversationsManager] - send : conv trouvee mais mauvaise car ip suivants differents : " + ipDistant.getHostAddress() + " et " + conversation.getIpDistant());
+				}
 			}
-			
+			elapsedTime = System.currentTimeMillis() - start;
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		if(!trouve) {
+			if(elapsedTime >= timeout_ms) {
+				System.out.println("[ConversationsManager ] - send : " + ConversationsManager.conversations);
+				System.out.println("[ConversationsManager] - send : TimeOut ! ");
+			}
 			throw new ConversationNotFound();
 		}
 	}

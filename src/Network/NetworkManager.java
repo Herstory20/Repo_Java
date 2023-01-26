@@ -271,6 +271,7 @@ public class NetworkManager implements Runnable{
 	private void initTCPSendThread() throws IOException{
 		// TCP thread config
 		try {
+			System.out.println("[initTCPSendThread] - creation du thread tcp");
 			this.tcp_send_thread = new TCP_Sender(this.tcp_ipDistant, NetworkManager.TCP_PORT);
 			Thread t_tcpsend = new Thread(this.tcp_send_thread);
 			t_tcpsend.start();
@@ -444,7 +445,9 @@ public class NetworkManager implements Runnable{
 		this.futurPortTcpLocal = 0;
 		this.futurPortTcpLocal = 0;
 		this.tcp_receive_thread.fermerConnexion();
-		this.tcp_send_thread.stop();
+		if(this.tcp_send_thread != null) {
+			this.tcp_send_thread.stop();
+		}
 		// réinitialiser l'instance de Conversation
 	}
 	

@@ -47,7 +47,7 @@ public class Conversation implements Runnable{
 	}
 
 
-	public void initSendThread() throws IOException {
+	public synchronized void initSendThread() throws IOException {
 		this.tcp_send_thread = new TCP_Sender(this.ipDistant, this.portDistant);
 		Thread t_tcpsend = new Thread(this.tcp_send_thread);
 		t_tcpsend.start();
