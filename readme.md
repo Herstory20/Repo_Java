@@ -7,7 +7,7 @@ Pour lancer le projet, il vous faut :
     - mvn compile
     - mvn exec:java
     dans ce cas, il faut installer maven sur la machine. Pour cela, il faut télécharger un Jar sur internet puis l'ajouter au PATH avec la commande suivante :
-    -- export path="$PATH:/[votre chemin vers le dossier décompressé]"
+    - export path="$PATH:/[votre chemin vers le dossier décompressé]"
 
 Il est à noter que si vous souhaitez compiler le programme sur plusieurs machines en même temps, c'est possible mais cela nécessite 2 choses :
     - utiliser ssh avec l'option -X pour permettre la récupération de l'affichage de la machine distante sur votre écran (ssh est à sens unique sinon, -X assure la transmission dans les deux sens)
