@@ -443,6 +443,7 @@ public class NetworkManager implements Runnable{
 					// mise à jour du port dans la bdd concernant ce destinataire
 					this.db.updateport(this.tcp_ipDistant.getHostAddress(), String.valueOf(this.futurPortTcpDistant));
 					this.convManager.lancerConversation(this.tcp_ipDistant);
+					this.futurPortTcpLocal = 0;
 					System.out.println("[negociationDePorts] : La discussion peut commencer.");
 				} catch (ConversationNotFound e) {
 					this.annulationNegociationPorts();
@@ -486,6 +487,7 @@ public class NetworkManager implements Runnable{
 				
 			this.futurPortTcpLocal = this.generateRandomPort();
 			// on réserve le port directement avec ConversationManager
+			System.out.println("Tentative de connexion avec " + this.tcp_ipDistant.getHostAddress() + " port " + this.futurPortTcpLocal);
 			resReservationPort = this.convManager.creerConversation(this.tcp_ipDistant, this.futurPortTcpLocal);
 			
 		}while(!resReservationPort);

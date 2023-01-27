@@ -36,9 +36,10 @@ public class ConversationsManager {
 		System.out.println("[ CONVERSATION_MANAGER ] - CREATION CONVERSATION");
 		boolean succes = true;
 		try {
+			System.out.println("[ CONVERSATION_MANAGER ] - list AVANT AJOUT : " + ConversationsManager.conversations);
 			tmpConv = new Conversation(ipDistant, portLocal);
 			ConversationsManager.conversations.add(tmpConv);
-			System.out.println("[ CONVERSATION_MANAGER ] - list : " + ConversationsManager.conversations);
+			System.out.println("[ CONVERSATION_MANAGER ] - list APRES AJOUT : " + ConversationsManager.conversations);
 		} catch (IOException e) {
 			succes = false;
 			System.out.println("[creerConversation] : port " + portLocal + " non libre !");
@@ -137,7 +138,7 @@ public class ConversationsManager {
 					}
 				}
 				else {
-					System.out.println("[ConversationsManager] - send : conv trouvee mais mauvaise car ip suivants differents : " + ipDistant.getHostAddress() + " et " + conversation.getIpDistant());
+					//System.out.println("[ConversationsManager] - send : conv trouvee mais mauvaise car ip suivants differents : " + ipDistant.getHostAddress() + " et " + conversation.getIpDistant());
 				}
 			}
 			elapsedTime = System.currentTimeMillis() - start;
