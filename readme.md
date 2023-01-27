@@ -10,8 +10,8 @@ Pour lancer le projet, il vous faut :
     - export path="$PATH:/[votre chemin vers le dossier décompressé]"
 
 Il est à noter que si vous souhaitez compiler le programme sur plusieurs machines en même temps, c'est possible mais cela nécessite 2 choses :
-    - utiliser ssh avec l'option -X pour permettre la récupération de l'affichage de la machine distante sur votre écran (ssh est à sens unique sinon, -X assure la transmission dans les deux sens).
-    - faire attention à ne pas les exécuter dans le même dossier avec le ssh, car la base de données sera partagée dans ce cas, ce qui donnera une exécution peu représentative d'une exécution classique.
+- utiliser ssh avec l'option -X pour permettre la récupération de l'affichage de la machine distante sur votre écran (ssh est à sens unique sinon, -X assure la transmission dans les deux sens).
+- faire attention à ne pas les exécuter dans le même dossier avec le ssh, car la base de données sera partagée dans ce cas, ce qui donnera une exécution peu représentative d'une exécution classique.
     
 Nous vous invitons à nous contacter si vous avez un quelconque problème avec nos fichiers aux adresses suivantes :
     <lvendevi@insa-toulouse.fr>
