@@ -28,5 +28,6 @@ public class MessageTests {
 		assertEquals(mBytes.getContenu(), mComm.getContenu());
 	}
 	
+	
 
 }
