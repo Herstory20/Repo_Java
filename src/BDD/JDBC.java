@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 
 /**
  *
@@ -385,23 +386,38 @@ public class JDBC {
 		return ip;
 	}
     
-    public Hashtable < String, String > selectmessagesM(String monIp, String ipdest) {
-        Hashtable < String, String > TableM = new Hashtable < String, String > ();
-        String sql = "SELECT * FROM Messages WHERE ip1=?, ip2=?  ORDER BY id";
+    public void refreshA() {
+        String sql = "DELETE FROM Annuaire";
+
+        try (Connection conn = this.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            // execute the delete statement
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    public List <Pair> selectmessagesM(String monIp, String ipdest) {
+        List <Pair> ListM = new ArrayList <Pair>();
+        String sql = "SELECT * FROM Messages WHERE (ip1=? and ip2=?) or (ip1=? and ip2=?)  ORDER BY id";
         try {
             Connection conn = this.connect();
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, monIp);
             pstmt.setString(2, ipdest);
+            pstmt.setString(3, ipdest);
+            pstmt.setString(4, monIp);
             ResultSet rs = pstmt.executeQuery();
             // loop through the result set
             while (rs.next()) {
-                TableM.put(rs.getString("ip2"), rs.getString("message"));
+                ListM.add(new Pair(rs.getString("ip2"), rs.getString("message")));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        return TableM;
+        return ListM;
     }
     /**
      * @param args the command line arguments

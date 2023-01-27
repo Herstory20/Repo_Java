@@ -14,9 +14,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import BDD.JDBC;
+import BDD.Pair;
 import Conversation.Conversation;
 import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
@@ -253,6 +255,7 @@ public class Home extends JFrame {
 							for (Iterator<JButton> iterator = tabUsers.iterator(); iterator.hasNext();) {
 								JButton tmpButton = (JButton) iterator.next();
 								if(tmpButton == e.getSource()) {
+									Home.refresh();
 									currentInterlocutor = tmpButton.getText();
 									try {
 										currentIpInterlocutor =  InetAddress.getByName(JDBC.getInstance().selectIPfromPseudoA(currentInterlocutor));
@@ -260,14 +263,13 @@ public class Home extends JFrame {
 										e1.printStackTrace();
 									}
 									// potentielle erreur si select null !
-									Home.refresh();
-									if(ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
+									//if(ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
 										try {
 											this.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
 										} catch (IOException e2) {
 											e2.printStackTrace();
 										}
-									}
+									//}
 									// met a jour currentConversation :
 									// Si conv existe, la charge dedans et appelle la fonction qui va remplir les messages
 									// - récupérer l'IP lié au pseudo depuis la bdd => currentIpInterlocutor
@@ -282,14 +284,12 @@ public class Home extends JFrame {
 							}
 						}
 
-						private void loadChatHistory(Hashtable<String, String> chatHistory) {
+						private void loadChatHistory( List <Pair> chathistory) {
 							String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
 
-							Set<String> setOfKeys = chatHistory.keySet();
-							for (String key : setOfKeys) {
-								String ipDestTmp = key;
-								String messageTmp = chatHistory.get(key);
-
+							for (int i = 0 ; i<chathistory.size(); i++) {
+								String ipDestTmp = chathistory.get(i).getIp();
+								String messageTmp = chathistory.get(i).getMessage();
 								if(ipDestTmp.equals(ipInterlocutorStr)) {
 									// cas d'un message envoyé par nous (le dest, c'est lui)
 									Home.addMessagesend(messageTmp,true);
@@ -323,7 +323,7 @@ public class Home extends JFrame {
 	}
 
 	/* boolean to seperate if we add the message as the sender or receiver */
-	public static void addMessagesend(String tosend , boolean sender) {
+	public static void addMessagesend(String tosend, boolean sender) {
 		final Color col;
 		if (sender) {
 			col = Color.green;
@@ -356,7 +356,7 @@ public class Home extends JFrame {
 		mess.setWrapStyleWord(true);
 		pmess.setOpaque(false);
 		pmess.setLayout(new MigLayout());
-		pmess.add(mess,"wrap, w 100%");
+		pmess.add(mess,"wrap, w 100%"); 
 		Date date = Calendar.getInstance().getTime();  
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
 		JLabel Pseudo = new JLabel(dateFormat.format(date));

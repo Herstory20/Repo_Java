@@ -143,6 +143,7 @@ public class NetworkManager implements Runnable{
 			System.out.println("[NETWORK MANAGER] - connexion : Mise à jour de l'Annuaire...");
 
 			System.out.println("avant modif ...");
+			this.db.refreshA();
 			this.db.selectAllA();
 			// on met à jour l'Annuaire avec les nouveaux IP et Pseudo
 			Set<String> setOfKeys = this.coordonneesUtilisateur.keySet();
