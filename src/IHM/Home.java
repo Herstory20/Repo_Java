@@ -33,10 +33,10 @@ import javax.swing.border.EmptyBorder;
 public class Home extends JFrame {
 
 
-	private JPanel messagebox = new JPanel();
+	private static JPanel messagebox = new JPanel();
 	private static JPanel destinataire = new JPanel();
 	private static JPanel expediteur = new JPanel();
-	private JScrollPane messbox = new JScrollPane();
+	private static JScrollPane messbox = new JScrollPane();
 	private static ArrayList<String> TabPseudo;
 	private static ArrayList<JButton> tabUsers;
 	private static String currentInterlocutor;
@@ -112,6 +112,7 @@ public class Home extends JFrame {
 						
 						System.out.println("[HOME] - SEND_BUTTONActionPerformed : Envoi du message...");
 						ConversationsManager.getInstance().send(currentIpInterlocutor, tosend);
+						Home.getMessbox().getVerticalScrollBar().setValue(Home.getMessbox().getVerticalScrollBar().getMaximum());
 						
 					} catch (IOException | ConversationNotFound e) {
 						e.printStackTrace();
@@ -152,7 +153,7 @@ public class Home extends JFrame {
 
 
 
-		messbox.getVerticalScrollBar().setUnitIncrement(10);
+		getMessbox().getVerticalScrollBar().setUnitIncrement(10);
 
 		JPanel Status = new JPanel();
 
@@ -180,7 +181,7 @@ public class Home extends JFrame {
 										.addGap(10))
 								.addGroup(groupLayout.createSequentialGroup()
 										.addPreferredGap(ComponentPlacement.RELATED)
-										.addComponent(messbox, GroupLayout.DEFAULT_SIZE, 1064, Short.MAX_VALUE)
+										.addComponent(getMessbox(), GroupLayout.DEFAULT_SIZE, 1064, Short.MAX_VALUE)
 										.addGap(12))))
 				);
 		groupLayout.setVerticalGroup(
@@ -188,7 +189,7 @@ public class Home extends JFrame {
 				.addGroup(groupLayout.createSequentialGroup()
 						.addContainerGap()
 						.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-								.addComponent(messbox, GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
+								.addComponent(getMessbox(), GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
 								.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
 										.addComponent(Status, GroupLayout.PREFERRED_SIZE, 68, GroupLayout.PREFERRED_SIZE)
 										.addPreferredGap(ComponentPlacement.RELATED)
@@ -223,7 +224,7 @@ public class Home extends JFrame {
 		nom.setFont(new Font("New Times Roman", Font.PLAIN, 16));;
 		Status.add(nom, "cell 0 1,alignx center,aligny top");
 
-		messbox.setViewportView(messagebox);
+		getMessbox().setViewportView(messagebox);
 		messagebox.setLayout(new GridLayout(0, 2, 0, 0));
 
 		destinataire.setBackground(Color.LIGHT_GRAY);
@@ -433,12 +434,11 @@ public class Home extends JFrame {
 			}
 		};
 		JTextArea mess = new JTextArea(tosend);
-		mess.setBackground(col);
 		mess.setEditable(false);
+		mess.setBackground(col);
 		mess.setLineWrap(true);
 		mess.setWrapStyleWord(true);
 		pmess.setOpaque(false);
-		pmess.add(mess);
 		pmess.setVisible(false);
 		pmess.setLayout(new MigLayout());
 		pmess.add(mess,"wrap, w 100%");
@@ -504,6 +504,10 @@ public class Home extends JFrame {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public static JScrollPane getMessbox() {
+		return messbox;
 	}
 
 	/*public static void createAndShowGUI() {

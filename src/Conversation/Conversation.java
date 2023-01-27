@@ -66,12 +66,12 @@ public class Conversation implements Runnable{
 		JDBC.getInstance().insertM(message.getContenu(), this.ipLocale.getHostAddress(), ipDistant.getHostAddress());
 		try {
 			Home.getInstance().addMessagesend(message.getContenu(), time,true);
-			Home.getInstance().addMessagereceive(message.getContenu(),time, true);
+			Home.getInstance().addMessagereceive(message.getContenu(),time,true);
+			Home.getMessbox().getVerticalScrollBar().setValue(Home.getMessbox().getVerticalScrollBar().getMaximum());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 	
 	public boolean isConversationOpen() {
@@ -93,8 +93,9 @@ public class Conversation implements Runnable{
 				String time = dateFormat.format(date);
 				JDBC.getInstance().insertM(contenu, ipDistant.getHostAddress(), this.ipLocale.getHostAddress());
 				try {
-					Home.getInstance().addMessagereceive(contenu,time,false);
 					Home.getInstance().addMessagesend(contenu, time,false);
+					Home.getInstance().addMessagereceive(contenu,time,false);
+					Home.getMessbox().getVerticalScrollBar().setValue(Home.getMessbox().getVerticalScrollBar().getMaximum());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

@@ -86,8 +86,13 @@ public class TCP_Receiver implements Runnable{
 				while(!messageFini) {
 					try {
 					    line = in.readLine();
-						System.out.println("[TCP_Receiver] : message en plusieurs parties ! ");
-						tmp += "\n" + line;
+						if (line == null) {
+							messageFini = true;
+						}
+						else {
+							System.out.println("[TCP_Receiver] : message en plusieurs parties ! recu : " + line);
+							tmp += "\n" + line;
+						}
 					}
 					catch (IOException e) {
 						if (e instanceof SocketTimeoutException)
