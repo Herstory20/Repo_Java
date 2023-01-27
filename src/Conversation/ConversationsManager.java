@@ -84,7 +84,26 @@ public class ConversationsManager {
 			throw new ConversationNotFound();
 		}
 	}
+
 	
+	public synchronized void deleteConversation(InetAddress ipDistant) throws ConversationNotFound {
+		boolean trouve = false;
+		for (Iterator<Conversation> iterator = ConversationsManager.conversations.iterator(); iterator.hasNext();) {
+			Conversation conversation = (Conversation) iterator.next();
+			
+			if(conversation.getIpDistant().equals(ipDistant)) {
+				conversation.stop();
+				ConversationsManager.conversations.remove(conversation);
+				System.out.println("[ConversationsManager] - deleteConversation : suppression de la conversation avec " + ipDistant.getHostName());
+				trouve = true;
+				break;
+			}
+			
+		}
+		if(!trouve) {
+			throw new ConversationNotFound();
+		}
+	}
 	public boolean isConversationExist(InetAddress ipDistant) {
 		boolean trouve = false;
 		for (Iterator<Conversation> iterator = ConversationsManager.conversations.iterator(); iterator.hasNext();) {

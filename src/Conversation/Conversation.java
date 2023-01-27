@@ -23,6 +23,7 @@ public class Conversation implements Runnable{
 	private int portLocal;
 	private int portDistant;
 	private boolean isOpen;
+	private boolean stop;
 	
 	// lève IOException si le port n'est pas disponible
 	public Conversation(InetAddress ipDistant, int portLocal) throws IOException {
@@ -30,10 +31,12 @@ public class Conversation implements Runnable{
 		this.portLocal = portLocal;
 		this.isOpen = false;
 		this.ipLocale = NetworkManager.getInstance().getMyIpAddress();
+		this.stop = false;
 
 		this.tcp_receive_thread = new TCP_Receiver(this.portLocal);
 		Thread t_tcprcv = new Thread(tcp_receive_thread);
 		t_tcprcv.start();
+		System.out.println("[Conversation] - New Conversation ipDistant = " + this.ipDistant + " _ portLocal = " + this.portLocal + " and i'm " + this);
 	}
 
 	
@@ -77,13 +80,17 @@ public class Conversation implements Runnable{
 	public boolean isConversationOpen() {
 		return this.isOpen;
 	}
+	
+	public void stop() {
+		this.stop = true;
+	}
 
 
 	@Override
 	public void run() {
-		System.out.println("[Conversation] : running");
+		System.out.println("[Conversation] : running on " + this.portLocal + " and i'm " + this);
 		Message recu;
-		while(true) {
+		while(!this.stop) {
 			
 			recu = this.tcp_receive_thread.getMessage();
 			if(recu != null){
@@ -110,6 +117,17 @@ public class Conversation implements Runnable{
 				e.printStackTrace();
 			}
 		}
+		try {
+			if(this.tcp_receive_thread != null) {
+				this.tcp_receive_thread.stop();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if(this.tcp_receive_thread != null) {
+			this.tcp_send_thread.stop();
+		}
+		System.out.println("[Conversation] : end");
 	}
 
 }

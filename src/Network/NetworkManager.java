@@ -444,6 +444,8 @@ public class NetworkManager implements Runnable{
 					this.db.updateport(this.tcp_ipDistant.getHostAddress(), String.valueOf(this.futurPortTcpDistant));
 					this.convManager.lancerConversation(this.tcp_ipDistant);
 					this.futurPortTcpLocal = 0;
+					this.futurPortTcpDistant = 0;
+					this.tcp_ipDistant = null;
 					System.out.println("[negociationDePorts] : La discussion peut commencer.");
 				} catch (ConversationNotFound e) {
 					this.annulationNegociationPorts();
@@ -495,6 +497,8 @@ public class NetworkManager implements Runnable{
 		System.out.println("port libre : " + this.futurPortTcpLocal);
 		
 		// si tout s'est bien passé, on envoie DiscussionOK avec le port concerné.
+		System.out.println("tcp_send_thread : " + this.tcp_send_thread);
+		
 		this.tcp_send_thread.setMessage(new Message("DiscussionOK:" + this.futurPortTcpLocal, MessageType.CONNECTIVITE));
 	}
 	
@@ -594,12 +598,15 @@ public class NetworkManager implements Runnable{
 			JDBC.getInstance().deleteA(ip.getHostAddress());
 			Home.updateUsersList();
 			Home.refresh();
+			ConversationsManager.getInstance().deleteConversation(ip);
 		} catch (UnknownHostException e) {
 			System.out.println("[traiterDeconnexion] - Adresse IP inconnue, deconnexion non prise en compte");
 		} catch (InvalidMessageFormatException e) {
 			System.out.println("[traiterDeconnexion] - Format du message de déconnexion invalide, deconnexion non prise en compte");
 		} catch (MyOwnIpException e) {
 			System.out.println("[traiterDeconnexion] - Propre déconnexion reçue, deconnexion non prise en compte");
+		} catch (ConversationNotFound e) {
+			System.out.println("[traiterDeconnexion] - Conversation non trouvee, deconnexion effective malgré tout ");
 		}
 	}
 	
