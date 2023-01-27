@@ -399,8 +399,8 @@ public class JDBC {
         }
     }
     
-    public List <Pair> selectmessagesM(String monIp, String ipdest) {
-        List <Pair> ListM = new ArrayList <Pair>();
+    public List <Tuple> selectmessagesM(String monIp, String ipdest) {
+        List <Tuple> ListM = new ArrayList <Tuple>();
         String sql = "SELECT * FROM Messages WHERE (ip1=? and ip2=?) or (ip1=? and ip2=?)  ORDER BY id";
         try {
             Connection conn = this.connect();
@@ -412,7 +412,7 @@ public class JDBC {
             ResultSet rs = pstmt.executeQuery();
             // loop through the result set
             while (rs.next()) {
-                ListM.add(new Pair(rs.getString("ip2"), rs.getString("message")));
+                ListM.add(new Tuple(rs.getString("ip2"), rs.getString("message"), rs.getTimestamp("date")));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());

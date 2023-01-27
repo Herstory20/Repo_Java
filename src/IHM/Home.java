@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import BDD.JDBC;
-import BDD.Pair;
+import BDD.Tuple;
 import Conversation.Conversation;
 import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
@@ -305,21 +305,25 @@ public class Home extends JFrame {
 							}
 						}
 
-						private void loadChatHistory( List <Pair> chathistory) {
+						private void loadChatHistory( List <Tuple> chathistory) {
 							String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
 
 							for (int i = 0 ; i<chathistory.size(); i++) {
 								String ipDestTmp = chathistory.get(i).getIp();
 								String messageTmp = chathistory.get(i).getMessage();
+								Timestamp temps = chathistory.get(i).getDate();
+								Date date = temps;
+								DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");  
+								String dateTmp = dateFormat.format(date);
 								if(ipDestTmp.equals(ipInterlocutorStr)) {
 									// cas d'un message envoyé par nous (le dest, c'est lui)
-									Home.addMessagesend(messageTmp,true);
-									Home.addMessagereceive(messageTmp,true);
+									Home.addMessagesend(messageTmp, dateTmp,true);
+									Home.addMessagereceive(messageTmp,dateTmp,true);
 								}
 								else {
 									// cas d'un message reçu (le dest c'est nous)
-									Home.addMessagesend(messageTmp,false);
-									Home.addMessagereceive(messageTmp,false);
+									Home.addMessagesend(messageTmp,dateTmp,false);
+									Home.addMessagereceive(messageTmp,dateTmp,false);
 								}
 							}
 						}
@@ -344,7 +348,7 @@ public class Home extends JFrame {
 	}
 
 	/* boolean to seperate if we add the message as the sender or receiver */
-	public static void addMessagesend(String tosend, boolean sender) {
+	public static void addMessagesend(String tosend, String date, boolean sender) {
 		final Color col;
 		if (sender) {
 			col = Color.green;
@@ -378,9 +382,7 @@ public class Home extends JFrame {
 		pmess.setOpaque(false);
 		pmess.setLayout(new MigLayout());
 		pmess.add(mess,"wrap, w 100%"); 
-		Date date = Calendar.getInstance().getTime();  
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
-		JLabel Pseudo = new JLabel(dateFormat.format(date));
+		JLabel Pseudo = new JLabel(date);
 		Pseudo.setFont(new Font("New Times Roman", Font.ITALIC, 10));
 		mess.setFont(new Font("New Times Roman", Font.PLAIN, 18));
 		mess.setForeground(Color.black);
@@ -395,7 +397,7 @@ public class Home extends JFrame {
 		Home.expediteur.revalidate();
 	}
 
-	public static void addMessagereceive(String tosend, boolean sender) {
+	public static void addMessagereceive(String tosend, String date, boolean sender) {
 		final Color col;
 		if (sender) {
 			col = Color.green;
@@ -431,9 +433,7 @@ public class Home extends JFrame {
 		pmess.setVisible(false);
 		pmess.setLayout(new MigLayout());
 		pmess.add(mess,"wrap, w 100%");
-		Date date = Calendar.getInstance().getTime();  
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
-		JLabel Pseudo = new JLabel(dateFormat.format(date));
+		JLabel Pseudo = new JLabel(date);
 		Pseudo.setFont(new Font("New Times Roman", Font.ITALIC, 10));
 		Pseudo.setVisible(false);
 		mess.setFont(new Font("New Times Roman", Font.PLAIN, 18));

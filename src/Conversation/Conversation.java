@@ -3,6 +3,10 @@ package Conversation;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import BDD.JDBC;
 import IHM.Home;
@@ -56,11 +60,13 @@ public class Conversation implements Runnable{
 	
 	public void send(Message message) {
 		this.tcp_send_thread.setMessage(message);
-		
+		Date date = Calendar.getInstance().getTime();  
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");  
+		String time = dateFormat.format(date);
 		JDBC.getInstance().insertM(message.getContenu(), this.ipLocale.getHostAddress(), ipDistant.getHostAddress());
 		try {
-			Home.getInstance().addMessagesend(message.getContenu(),true);
-			Home.getInstance().addMessagereceive(message.getContenu(), true);
+			Home.getInstance().addMessagesend(message.getContenu(), time,true);
+			Home.getInstance().addMessagereceive(message.getContenu(),time, true);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -82,10 +88,13 @@ public class Conversation implements Runnable{
 			recu = this.tcp_receive_thread.getMessage();
 			if(recu != null){
 				String contenu = recu.getContenu();
+				Date date = Calendar.getInstance().getTime();  
+				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");  
+				String time = dateFormat.format(date);
 				JDBC.getInstance().insertM(contenu, ipDistant.getHostAddress(), this.ipLocale.getHostAddress());
 				try {
-					Home.getInstance().addMessagereceive(contenu,false);
-					Home.getInstance().addMessagesend(contenu, false);
+					Home.getInstance().addMessagereceive(contenu,time,false);
+					Home.getInstance().addMessagesend(contenu, time,false);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
