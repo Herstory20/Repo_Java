@@ -67,10 +67,20 @@ public class Home extends JFrame {
 		//Make sure we have nice window decorations.
 		setDefaultLookAndFeelDecorated(true);
 		//Create and set up the window.
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds((int) size.getWidth() / 2 - 1280 / 2, (int) size.getHeight() / 2 - 720 / 2, 1280, 720);
 		getContentPane().setBackground(new Color(108, 226, 247));
+		
+		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		this.addWindowListener(new WindowAdapter() {
+		    @Override
+		    public void windowClosing(WindowEvent event) {
+		        exitProcedure();
+		    }
+		});
+
+
 
 		JScrollPane username = new JScrollPane();
 		username.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -235,6 +245,17 @@ public class Home extends JFrame {
 		getContentPane().setLayout(groupLayout);
 	}
 
+	public void exitProcedure() {
+		try {
+			NetworkManager.getInstance().finalize();
+			System.out.println("Network Manager fermé !");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+		}
+	    this.dispose();
+	    System.exit(0);
+	}
+	
 	public static void updateUsersList() {
 
 		Home.tabUsers.clear();

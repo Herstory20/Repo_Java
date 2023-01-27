@@ -188,7 +188,12 @@ public class NetworkManager implements Runnable{
 			if(!recuUdp.isEmpty()) {
 				System.out.println("[NETWORK MANAGER] - update : MESSAGE UDP " + recuUdp + " RECU ! Réponse en cours...");
 				if(this.isConnectivite(recuUdp)) {
-					this.repondreTentativeConnexionUDP(recuUdp);
+					if(this.isDeconnexionMessage(recuUdp)) {
+						this.traiterDeconnexion(recuUdp);
+					}
+					else {
+						this.repondreTentativeConnexionUDP(recuUdp);
+					}
 				}
 				else if (this.isChangementPseudo(recuUdp)) {
 					this.repondreTentativeChangementPseudo(recuUdp);
@@ -247,6 +252,19 @@ public class NetworkManager implements Runnable{
 		return this.nouveauPseudoOK;
 	}
 	
+
+
+	public void deconnexion() {
+		String message = "Deconnexion" + ";" + monIp.getHostAddress();
+		this.udp_send_thread.setBroadcastEnabled();
+		this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("[NETWORK MANAGER] - deconnexion : Terminee");
+	}
 	
 	
 	
@@ -288,33 +306,33 @@ public class NetworkManager implements Runnable{
 		System.out.println("[repondreTentativeConnexionUDP] : Réponse en cours à [ " + recu + " ]");
 		if (this.isConnectivite(recu)) {
 			String[] coord = null ;
+			try {
+				coord = getCoordonneesFromDemandeConnexion(recu);
+				
+				// on envoit OK si tout est bon avec nos coordonnées / KO sinon
+				String message = coord[2] + ";" + monIp.getHostAddress() + ";" + pseudo;
+				
 				try {
-					coord = getCoordonneesFromDemandeConnexion(recu);
-					
-					// on envoit OK si tout est bon avec nos coordonnées / KO sinon
-					String message = coord[2] + ";" + monIp.getHostAddress() + ";" + pseudo;
-					
-					try {
-						this.udp_send_thread.setIp(InetAddress.getByName(coord[0]));
-						this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-					}
-					
-					// On stocke son IP et son PSEUDO dans l'Annuaire
-					if(coord[2].equals("OK")) {
-						System.out.println("MAJ de la table Annuaire (ajout du pseudo)...");
-						String ipTmp = coord[0];
-						String pseudoTmp = coord[1];
-						this.db.insertAwithoutP(ipTmp, pseudoTmp);
-						Home.updateUsersList();// faire un getinstance !! no need for static
-					}
-				} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
+					this.udp_send_thread.setIp(InetAddress.getByName(coord[0]));
+					this.udp_send_thread.setMessage(new Message(message, MessageType.CONNECTIVITE));
+				} catch (UnknownHostException e) {
 					e.printStackTrace();
-				} catch (MyOwnIpException e) {
-					// si c'est notre IP, on ignore le paquet
-					System.out.println("[repondreTentativeConnexionUDP] : Propre paquet reçu");
 				}
+				
+				// On stocke son IP et son PSEUDO dans l'Annuaire
+				if(coord[2].equals("OK")) {
+					System.out.println("MAJ de la table Annuaire (ajout du pseudo)...");
+					String ipTmp = coord[0];
+					String pseudoTmp = coord[1];
+					this.db.insertAwithoutP(ipTmp, pseudoTmp);
+					Home.updateUsersList();// faire un getinstance !! no need for static
+				}
+			} catch (InvalidMessageFormatException | InvalidIpException | InvalidConnexionMessageException e) {
+				e.printStackTrace();
+			} catch (MyOwnIpException e) {
+				// si c'est notre IP, on ignore le paquet
+				System.out.println("[repondreTentativeConnexionUDP] : Propre paquet reçu");
+			}
 		}
 	}
 
@@ -335,6 +353,7 @@ public class NetworkManager implements Runnable{
 						if(!nouveauPseudo.equals(this.pseudo)) {
 							reponse = "OK";
 							JDBC.getInstance().updateLogin(nouveauPseudo, ipSender);
+							Home.updateUsersList();
 						}
 						else {
 							reponse = "KO";
@@ -471,10 +490,15 @@ public class NetworkManager implements Runnable{
 	@Override
 	public void finalize() throws IOException
 	{
+		this.deconnexion();
 		this.udp_send_thread.stop();
 		this.udp_receive_thread.stop();
-		this.tcp_send_thread.stop();
-		this.tcp_receive_thread.stop();
+		if(this.tcp_send_thread != null) {
+			this.tcp_send_thread.stop();
+		}
+		if(this.tcp_send_thread != null) {
+			this.tcp_receive_thread.stop();
+		}
 		System.out.println("[Network Manager] : Fin network manager");
 	}
 	
@@ -507,7 +531,65 @@ public class NetworkManager implements Runnable{
 		
 		return (ordinalReponse == MessageType.CHANGEMENT_PSEUDO.ordinal());
 	}
+	
+	private boolean isDeconnexionMessage(String reponse) {
+		boolean res = false;
+    	String message = reponse.substring(1);
+    	String messagesSepares[] = message.split(";");
+    	if(messagesSepares.length == 2) {
+    		 if (messagesSepares[0].equals("Deconnexion")) {
+				 if(!messagesSepares[1].isEmpty()) {
+	    			 res = true;
+				 }
+		    	else {
+		    		System.out.println("[isDeconnexionMessage] - ip vide");
+		    	}
+	    	}
+	    	else {
+	    		System.out.println("[isDeconnexionMessage] - mauvais message (pas deco mais " + messagesSepares[0] + ")");
+	    	}
+    	}
+    	else {
+    		System.out.println("[isDeconnexionMessage] - mauvaise taille : " + messagesSepares.length);
+    	}
 
+    	return res;
+	}
+
+	private InetAddress recevoirDeconnexionMessage(String reponse) throws InvalidMessageFormatException, MyOwnIpException, UnknownHostException {
+    	String message = reponse.substring(1);
+    	String messagesSepares[] = message.split(";");
+    	if(messagesSepares.length != 2) {
+			System.out.println("[recevoirDeconnexionMessage] - mauvaise taille : " + messagesSepares.length);
+    		throw new InvalidMessageFormatException();
+    	}
+		if (!messagesSepares[0].equals("Deconnexion")) {
+			System.out.println("[recevoirDeconnexionMessage] - mauvais format (!=Deconnexion)");
+    		throw new InvalidMessageFormatException();
+    	}
+		if(messagesSepares[1].isEmpty()) {
+			System.out.println("[recevoirDeconnexionMessage] - ip vide");
+    		throw new InvalidMessageFormatException();
+		}
+    	if(messagesSepares[1].equals(this.monIp.getHostAddress())) {
+    		throw new MyOwnIpException();
+    	}
+    	return InetAddress.getByName(messagesSepares[1]);
+	}
+	
+	private void traiterDeconnexion(String message) {
+		try {
+			InetAddress ip = this.recevoirDeconnexionMessage(message);
+			JDBC.getInstance().deleteA(ip.getHostAddress());
+			Home.updateUsersList();
+		} catch (UnknownHostException e) {
+			System.out.println("[traiterDeconnexion] - Adresse IP inconnue, deconnexion non prise en compte");
+		} catch (InvalidMessageFormatException e) {
+			System.out.println("[traiterDeconnexion] - Format du message de déconnexion invalide, deconnexion non prise en compte");
+		} catch (MyOwnIpException e) {
+			System.out.println("[traiterDeconnexion] - Propre déconnexion reçue, deconnexion non prise en compte");
+		}
+	}
 	
     private String[] getCoordonneesFromReponseConnexion(String reponse) throws InvalidMessageFormatException, InvalidIpException, MyOwnIpException {
     	String[] coordonnees = new String[3];
