@@ -44,7 +44,7 @@ public class NetworkManager implements Runnable{
 	private static final int UDP_PORT = 1236;
 	private static final int TCP_PORT = 1237;
 	private int futurPortTcpLocal, futurPortTcpDistant;
-	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 1000;
+	private static final int CONNEXION_DELAI_ATTENTE_REPONSE_MS = 100;
 	private String pseudo;
 	private Hashtable<String, String> coordonneesUtilisateur;
 	private static NetworkManager instance;

@@ -8,7 +8,7 @@ import java.util.Scanner;
 import Conversation.ConversationsManager;
 import Conversation.Exceptions.ConversationNotFound;
 import Network.Exceptions.InvalidPseudoException;
-public class Clavardeur {
+public class ClavardeurTest {
 
 	public static void main(String[] args) throws IOException, ConversationNotFound {
 		
