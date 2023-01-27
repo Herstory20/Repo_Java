@@ -220,8 +220,8 @@ public class Home extends JFrame {
 			// TODO Auto-generated catch block
 			e3.printStackTrace();
 		}
-		nom.setForeground(Color.ORANGE);
-		nom.setFont(new Font("New Times Roman", Font.PLAIN, 16));;
+		nom.setForeground(Color.black);
+		nom.setFont(new Font("New Times Roman", Font.BOLD, 20));;
 		Status.add(nom, "cell 0 1,alignx center,aligny top");
 
 		getMessbox().setViewportView(messagebox);
@@ -291,7 +291,7 @@ public class Home extends JFrame {
 									// potentielle erreur si select null !
 									//if(ConversationsManager.getInstance().isConversationExist(currentIpInterlocutor)) {
 										try {
-											this.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
+											Home.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
 										} catch (IOException e2) {
 											e2.printStackTrace();
 										}
@@ -310,30 +310,12 @@ public class Home extends JFrame {
 							}
 						}
 
-						private void loadChatHistory( List <Tuple> chathistory) {
-							String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
-
-							for (int i = 0 ; i<chathistory.size(); i++) {
-								String ipDestTmp = chathistory.get(i).getIp();
-								String messageTmp = chathistory.get(i).getMessage();
-								Timestamp temps = chathistory.get(i).getDate();
-								Date date = temps;
-								DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");  
-								String dateTmp = dateFormat.format(date);
-								if(ipDestTmp.equals(ipInterlocutorStr)) {
-									// cas d'un message envoyé par nous (le dest, c'est lui)
-									Home.addMessagesend(messageTmp, dateTmp,true);
-									Home.addMessagereceive(messageTmp,dateTmp,true);
-								}
-								else {
-									// cas d'un message reçu (le dest c'est nous)
-									Home.addMessagesend(messageTmp,dateTmp,false);
-									Home.addMessagereceive(messageTmp,dateTmp,false);
-								}
-							}
-						}
 					});
 					Home.Users.add(tmp, "wrap, grow");
+					if (i==0) {
+						currentIpInterlocutor =  InetAddress.getByName(JDBC.getInstance().selectIPfromPseudoA(pstmp));
+						Home.loadChatHistory(JDBC.getInstance().selectmessagesM(NetworkManager.getInstance().getMyIpAddress().getHostAddress(), currentIpInterlocutor.getHostAddress()));
+					}
 					
 				}
 			} catch (IOException e) {
@@ -346,6 +328,29 @@ public class Home extends JFrame {
 		Home.Users.repaint();
 		Home.username.revalidate();
 		Home.username.repaint();
+	}
+	
+	private static void loadChatHistory( List <Tuple> chathistory) {
+		String ipInterlocutorStr = currentIpInterlocutor.getHostAddress();
+
+		for (int i = 0 ; i<chathistory.size(); i++) {
+			String ipDestTmp = chathistory.get(i).getIp();
+			String messageTmp = chathistory.get(i).getMessage();
+			Timestamp temps = chathistory.get(i).getDate();
+			Date date = temps;
+			DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");  
+			String dateTmp = dateFormat.format(date);
+			if(ipDestTmp.equals(ipInterlocutorStr)) {
+				// cas d'un message envoyé par nous (le dest, c'est lui)
+				Home.addMessagesend(messageTmp, dateTmp,true);
+				Home.addMessagereceive(messageTmp,dateTmp,true);
+			}
+			else {
+				// cas d'un message reçu (le dest c'est nous)
+				Home.addMessagesend(messageTmp,dateTmp,false);
+				Home.addMessagereceive(messageTmp,dateTmp,false);
+			}
+		}
 	}
 
 	public static void refresh() {
