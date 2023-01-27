@@ -36,7 +36,7 @@ public class TCP_Receiver implements Runnable{
 	private void attenteConnexion(){
         try {
 			this.link = this.servSocket.accept();
-	    	this.link.setSoTimeout(1000);
+	    	this.link.setSoTimeout(10);
 	        this.ipDest = this.link.getInetAddress();
 	        System.out.println("[TCP_Receiver] : Connexion detectee de " + this.ipDest);
 	        this.in = new BufferedReader(new InputStreamReader(this.link.getInputStream()));
@@ -73,13 +73,46 @@ public class TCP_Receiver implements Runnable{
 
 	public synchronized void receive()  {
 		String tmp = null;
+		boolean messageFini = false;
 		
 		try {
-			tmp = in.readLine();
+			
+			
+			String line = in.readLine();
+			tmp = line;
+			System.out.println("[TCP_Receiver] : readline OK : recu = " + tmp);
+			if(line != null && !line.isEmpty())
+			{
+				while(!messageFini) {
+					try {
+					    line = in.readLine();
+						System.out.println("[TCP_Receiver] : message en plusieurs parties ! ");
+						tmp += "\n" + line;
+					}
+					catch (IOException e) {
+						if (e instanceof SocketTimeoutException)
+						{
+							System.out.println("[TCP_Receiver] : Fin du message !");
+							messageFini = true;
+						}
+						else {
+							System.out.println("[TCP_Receiver] : Erreur, client déconnecté !");
+					        this.fermerConnexion();
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+			
+			System.out.println("[TCP_Receiver] : tmp = " + tmp);
+
+			//tmp = in.readLine();
 			if(tmp != null) {
-				// on fait ça pour créer un objet message a partir du message recu
-				this.message = new Message(tmp.getBytes());
-				System.out.println("[TCP_Receiver] : MESSAGE RECU ! message = [ " + this.message.getTrameString() + " ]");
+				if(!tmp.isEmpty() && !tmp.isBlank()) {
+					// on fait ça pour créer un objet message a partir du message recu
+					this.message = new Message(tmp.getBytes());
+					System.out.println("[TCP_Receiver] : MESSAGE RECU ! message = [ " + this.message.getTrameString() + " ]");
+				}
 			}
 			else {
 				System.out.println("[TCP_Receiver] : Client déconnecté !");
@@ -114,7 +147,6 @@ public class TCP_Receiver implements Runnable{
 				this.attenteConnexion();
 			}
 			else{
-
 				this.receive();
 			}
 			

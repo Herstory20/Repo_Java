@@ -582,6 +582,7 @@ public class NetworkManager implements Runnable{
 			InetAddress ip = this.recevoirDeconnexionMessage(message);
 			JDBC.getInstance().deleteA(ip.getHostAddress());
 			Home.updateUsersList();
+			Home.refresh();
 		} catch (UnknownHostException e) {
 			System.out.println("[traiterDeconnexion] - Adresse IP inconnue, deconnexion non prise en compte");
 		} catch (InvalidMessageFormatException e) {

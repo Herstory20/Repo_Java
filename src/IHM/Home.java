@@ -46,6 +46,8 @@ public class Home extends JFrame {
 	private JLabel nom = new JLabel();
 	private static JDBC app = JDBC.getInstance();
 	private static JPanel Users = new JPanel();
+	private static JScrollPane username = new JScrollPane();
+
 
 	// j'étais en train d'essayer de mettre auto increment pour les messages
 	// + faut tester l'envoi messages
@@ -82,7 +84,6 @@ public class Home extends JFrame {
 
 
 
-		JScrollPane username = new JScrollPane();
 		username.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		username.getVerticalScrollBar().setUnitIncrement(10);
 
@@ -234,7 +235,7 @@ public class Home extends JFrame {
 
 		username.setViewportView(Users);
 		Users.setLayout(new MigLayout("fillx"));
-		this.tabUsers = new ArrayList<>();
+		tabUsers = new ArrayList<>();
 
 		Home.updateUsersList();
 
@@ -328,17 +329,22 @@ public class Home extends JFrame {
 							}
 						}
 					});
-				Home.Users.add(tmp, "wrap, grow");
-				Home.Users.revalidate();
+					Home.Users.add(tmp, "wrap, grow");
+					
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+
+		Home.Users.revalidate();
+		Home.Users.repaint();
+		Home.username.revalidate();
+		Home.username.repaint();
 	}
 
-	protected static void refresh() {
+	public static void refresh() {
 		expediteur.removeAll();
 		destinataire.removeAll();
 		expediteur.revalidate();
@@ -500,7 +506,7 @@ public class Home extends JFrame {
 	/*public static void createAndShowGUI() {
 
     }*/
-
+/*
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -509,5 +515,5 @@ public class Home extends JFrame {
 				frame.setVisible(true);
 			}
 		});
-	}
+	}*/
 }
