@@ -17,7 +17,7 @@ public class TCP_Receiver implements Runnable{
 	private int port;
 	private Socket link;
 	private InetAddress ipDest;
-	ServerSocket servSocket;
+	private ServerSocket servSocket;
 	private BufferedReader in;
 	private Message message;
 	private boolean running;
@@ -71,7 +71,7 @@ public class TCP_Receiver implements Runnable{
 		return this.ipDest;
 	}
 
-	public synchronized void receive()  {
+	private synchronized void receive()  {
 		String tmp = null;
 		boolean messageFini = false;
 		

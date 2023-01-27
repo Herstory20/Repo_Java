@@ -102,7 +102,7 @@ public class UDP_Sender implements Runnable{
 		UDP_Sender.message = null;
 	}
 
-    public void broadcast() throws IOException {
+    private void broadcast() throws IOException {
         UDP_Sender.socket.setBroadcast(true);
 
         byte[] buffer = UDP_Sender.message.getTrame();
