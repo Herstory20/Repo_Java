@@ -129,21 +129,24 @@ public class Home extends JFrame {
 				/*Interface de changement de pseudo*/
 				String Login = JOptionPane.showInputDialog(null, "Votre nouveau login :");
 				/* Envoyer UDP pour tout le monde pour informer le changement */
-				try {
-					while (!NetworkManager.getInstance().changePseudo(Login)) {
-						JOptionPane.showMessageDialog(null, "Le login est déjà utilisé !!");
-						Login = JOptionPane.showInputDialog(null, "Votre nouveau login :");
+				if ((nom.getText()!=Login) && (Login!= null) && (!Login.isEmpty())) {
+					try {
+						while (!NetworkManager.getInstance().changePseudo(Login)) {
+							JOptionPane.showMessageDialog(null, "Le login est déjà utilisé !!");
+							Login = JOptionPane.showInputDialog(null, "Votre nouveau login :");
+						}
+
+					} catch (HeadlessException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				} catch (HeadlessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if ((nom.getText()!=Login) && (Login!= null) && (!Login.isEmpty())) {
+						nom.setText(Login);
+					}
 				}
-				nom.setText(Login);
-
-
 			}
 		});
 
