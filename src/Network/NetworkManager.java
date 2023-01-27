@@ -715,7 +715,8 @@ public class NetworkManager implements Runnable{
     	
     	// le type du message est valide 
     	if(!(	messagesSepares[0].equals("Demande") || 
-    			messagesSepares[0].equals("Reponse"))) {
+    			messagesSepares[0].equals("Reponse") || 
+    			messagesSepares[0].equals("DemandeOK"))) {
     		throw new InvalidMessageFormatException();
     	}
     	if(messagesSepares[0].equals("Demande")) {
