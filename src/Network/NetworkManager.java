@@ -242,6 +242,11 @@ public class NetworkManager implements Runnable{
 				
 		if(this.nouveauPseudoOK) {
 			System.out.println("[NETWORK MANAGER] - changePseudo : Mise à jour du pseudo...");
+
+			message = "DemandeOK" + ";" + monIp.getHostAddress() + ";" + nouveauPseudo;
+			this.udp_send_thread.setBroadcastEnabled();
+			this.udp_send_thread.setMessage(new Message(message, MessageType.CHANGEMENT_PSEUDO));
+			
 			this.pseudo = nouveauPseudo;
 		}
 		else {
@@ -352,8 +357,6 @@ public class NetworkManager implements Runnable{
 						String reponse;
 						if(!nouveauPseudo.equals(this.pseudo)) {
 							reponse = "OK";
-							JDBC.getInstance().updateLogin(nouveauPseudo, ipSender);
-							Home.updateUsersList();
 						}
 						else {
 							reponse = "KO";
@@ -367,6 +370,12 @@ public class NetworkManager implements Runnable{
 							e.printStackTrace();
 						}
 						
+					}
+					else if(typeMessage.equals("DemandeOK")) {
+						String nouveauPseudo = coord[2];
+						JDBC.getInstance().updateLogin(nouveauPseudo, ipSender);
+						Home.updateUsersList();
+						System.out.println("[repondreTentativeConnexionUDP] : Changement de pseudo effectif pour " + ipSender + " => " + nouveauPseudo);
 					}
 					else if (typeMessage.equals("Reponse")) {
 						String reponse = coord[2];
